@@ -1,13 +1,16 @@
 :root {
   color-scheme: dark;
-  --bg: #0b1020;
-  --card: #141a2e;
-  --border: #2d3358;
+  --bg: #080c1a;
+  --card: #101833;
+  --border: #283463;
   --text: #f3f6ff;
-  --subtext: #9ba6d4;
+  --subtext: #97a8df;
   --primary: #4da0ff;
-  --primary-strong: #3a7dff;
+  --primary-strong: #2f7cf7;
   --danger: #ff5e73;
+  --good: #62e6a4;
+  --gem: #8de1ff;
+  --coin: #ffd970;
   --shadow: rgba(0, 0, 0, 0.35);
 }
 
@@ -20,7 +23,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: radial-gradient(circle at top, #192345, var(--bg));
+  background: radial-gradient(circle at top, #182850, var(--bg));
   color: var(--text);
   font-family: "Inter", "Segoe UI", system-ui, sans-serif;
 }
@@ -33,7 +36,7 @@ body {
 }
 
 .app {
-  width: min(980px, 100%);
+  width: min(1100px, 100%);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent), var(--card);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -57,6 +60,7 @@ h1 {
 .stats {
   display: flex;
   gap: 0.65rem;
+  flex-wrap: wrap;
 }
 
 .stat {
@@ -77,6 +81,14 @@ h1 {
 .value {
   font-weight: 750;
   font-size: 1.05rem;
+}
+
+.value.gems {
+  color: var(--gem);
+}
+
+.value.coins {
+  color: var(--coin);
 }
 
 .canvas-panel {
@@ -121,6 +133,128 @@ canvas {
   max-width: 45ch;
 }
 
+.meta-row {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.wallet {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  color: var(--subtext);
+  font-size: 0.9rem;
+}
+
+.wallet b {
+  color: var(--text);
+}
+
+.status-pill {
+  border: 1px solid rgba(98, 230, 164, 0.35);
+  background: rgba(98, 230, 164, 0.12);
+  color: var(--good);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.dashboard {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.7rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1.02rem;
+}
+
+.panel-note {
+  margin: 0;
+  color: var(--subtext);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.mission-list {
+  margin: 0;
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--subtext);
+  font-size: 0.89rem;
+}
+
+.shop-grid,
+.premium-grid {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.shop-btn,
+.gem-btn {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 0.48rem 0.62rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.shop-btn:hover,
+.gem-btn:hover {
+  filter: brightness(1.05);
+}
+
+.pack-list {
+  margin-top: 0.6rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.pack-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+}
+
+.pack-card div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.pack-card span {
+  color: var(--subtext);
+  font-size: 0.82rem;
+}
+
+.paypal-slot {
+  min-width: 190px;
+}
+
 .controls {
   margin-top: 0.85rem;
   display: flex;
@@ -157,6 +291,11 @@ canvas {
   border: 1px solid rgba(133, 181, 255, 0.4);
 }
 
+.button.positive {
+  background: linear-gradient(180deg, #3cbf88, #299e6e);
+  border-color: rgba(104, 251, 183, 0.45);
+}
+
 footer {
   margin-top: 0.85rem;
   color: var(--subtext);
@@ -179,5 +318,14 @@ code {
 
   .button {
     flex: 1;
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .pack-card {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

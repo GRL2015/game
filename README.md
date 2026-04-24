@@ -1,26 +1,40 @@
-# Neon Drift
+# Neon Drift: Ascension
 
-Neon Drift is a lightweight browser arcade game built for static hosting.  
-You can upload it directly to popular internet game hubs.
+Neon Drift is a static HTML5 arcade game designed for upload to browser game hubs.
+This version includes a deeper progression loop and optional PayPal gem pack support.
 
-## Gameplay
+## Core Loop
 
-- Dodge falling meteors.
-- Collect green orbs for bonus points.
-- Controls:
-  - Keyboard: `A` / `D` or `←` / `→`
-  - Touch: drag left/right on the game canvas
-  - Pause/Resume: `Space` or Pause button
+- Fast dodge gameplay with scaling difficulty.
+- Multi-life runs with armor/block and revive options.
+- Mission board with claimable rewards.
+- Persistent progression:
+  - Credits
+  - Gems
+  - XP / rank
+  - Upgrades (engine, armor, magnet)
+  - Cosmetic unlocks
+- Ability buttons and keybinds:
+  - `Boost` (`E`)
+  - `Shield` (`Q`)
+  - `Magnet`
+
+## Controls
+
+- Keyboard:
+  - Move: `A` / `D` or `←` / `→`
+  - Pause/Resume: `Space`
+  - Abilities: `E`, `Q`
+- Touch:
+  - Drag left/right on the canvas
 
 ## Project Files
 
-- `index.html` - game page and UI
-- `style.css` - styling and responsive layout
-- `game.js` - gameplay logic and rendering loop
+- `index.html` - game layout and UI
+- `style.css` - visuals and responsive layout
+- `game.js` - gameplay, progression, mission, and PayPal logic
 
 ## Run Locally
-
-Any static server works. Example:
 
 ```bash
 python3 -m http.server 8080
@@ -28,37 +42,68 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080`.
 
+## PayPal Setup (Payments to Your Account)
+
+The game uses the PayPal JavaScript SDK for checkout.
+
+1. Go to PayPal Developer Dashboard:
+   - https://developer.paypal.com/
+2. Create an app under your PayPal business account.
+3. Copy your **Client ID** (Sandbox for testing, Live for production).
+4. In `game.js`, update:
+
+```js
+const PAYPAL_CONFIG = {
+  clientId: "YOUR_REAL_CLIENT_ID",
+  currency: "USD",
+  ...
+};
+```
+
+5. Re-upload your files to your game host.
+
+When players purchase packs, funds settle to the PayPal account connected to that client ID.
+
+### Important payment/security note
+
+This demo is static-only. It grants gems client-side after `onApprove`.
+For production anti-fraud, use a backend to verify orders via PayPal API before granting currency.
+
+## Ethical Monetization Notes
+
+- Paid items are optional and not required to play.
+- Core progression remains available through gameplay rewards.
+- No loot-box randomness in paid purchases.
+
 ## Build Upload Package
 
-From the project root:
+From project root:
 
 ```bash
 zip -r neon-drift.zip index.html style.css game.js
 ```
 
-## Upload to itch.io (HTML game)
+## Upload to itch.io
 
-1. Go to **Create new project**.
-2. Choose **Kind of project -> HTML**.
+1. Create a new project.
+2. Select **HTML** as project type.
 3. Upload `neon-drift.zip`.
-4. Enable **This file will be played in the browser**.
-5. Save and publish.
+4. Enable browser play.
+5. Publish.
 
-Recommended itch.io embed options:
-- Viewport width: `960`
-- Viewport height: `640`
-- Fullscreen button: enabled
+Recommended viewport:
+- Width: `960`
+- Height: `640`
 
 ## Upload to Newgrounds
 
-1. Create a new game submission.
-2. Choose HTML5/Web upload.
-3. Upload the same zip (`neon-drift.zip`) with `index.html` in the root.
-4. Set dimensions near `960 x 640` (or platform defaults).
-5. Publish your submission page.
+1. Start a new HTML5 game submission.
+2. Upload `neon-drift.zip` (with `index.html` at archive root).
+3. Set game dimensions near `960x640`.
+4. Publish.
 
-## Notes for Game Hubs
+## Notes
 
-- No backend is required.
-- High score uses browser local storage (per player browser/device).
-- Keep `index.html` at the archive root so platforms detect entry automatically.
+- Static hosting only (no backend required for demo).
+- Progress is stored in browser localStorage.
+- Keep `index.html` at zip root for platform auto-detection.
