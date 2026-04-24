@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - cursor/web-game-uploadable-a043
     paths:
       - "index.html"
       - "style.css"
