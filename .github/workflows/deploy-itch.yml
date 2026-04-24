@@ -1,0 +1,69 @@
+name: Deploy Neon Drift to itch.io
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "index.html"
+      - "style.css"
+      - "game.js"
+      - "README.md"
+      - ".github/workflows/deploy-itch.yml"
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "itch.io channel (defaults to repository variable ITCH_IO_CHANNEL or html5)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      ZIP_NAME: neon-drift.zip
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate itch.io config
+        run: |
+          if [ -z "${{ secrets.ITCH_API_KEY }}" ]; then
+            echo "Missing required secret: ITCH_API_KEY"
+            exit 1
+          fi
+          if [ -z "${{ vars.ITCH_IO_USER }}" ]; then
+            echo "Missing required repository variable: ITCH_IO_USER"
+            exit 1
+          fi
+          if [ -z "${{ vars.ITCH_IO_GAME }}" ]; then
+            echo "Missing required repository variable: ITCH_IO_GAME"
+            exit 1
+          fi
+
+      - name: Build upload zip
+        run: |
+          zip -r "$ZIP_NAME" index.html style.css game.js README.md
+
+      - name: Install butler
+        run: |
+          curl -fsSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          python3 - <<'PY'
+          import zipfile
+          zipfile.ZipFile("butler.zip").extractall("butler-bin")
+          PY
+          chmod +x butler-bin/butler
+          ./butler-bin/butler --version
+
+      - name: Push build to itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.ITCH_API_KEY }}
+        run: |
+          CHANNEL_INPUT="${{ github.event.inputs.channel }}"
+          CHANNEL_VAR="${{ vars.ITCH_IO_CHANNEL }}"
+          CHANNEL="${CHANNEL_INPUT:-${CHANNEL_VAR:-html5}}"
+          TARGET="${{ vars.ITCH_IO_USER }}/${{ vars.ITCH_IO_GAME }}:${CHANNEL}"
+          ./butler-bin/butler push "$ZIP_NAME" "$TARGET" --userversion "${{ github.run_number }}-${{ github.sha }}"

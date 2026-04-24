@@ -89,6 +89,49 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080`.
 
+## Prompt-Only Publishing Automation (GitHub Actions -> itch.io)
+
+You can configure one-time credentials so future deploys happen from prompts.
+
+### 1) One-time repo setup (GitHub UI)
+
+Add this secret:
+
+- `ITCH_API_KEY` = your itch.io API key (from https://itch.io/user/settings/api-keys)
+
+Add these repository variables:
+
+- `ITCH_IO_USER` = your itch username (example: `yourname`)
+- `ITCH_IO_GAME` = your game slug (example: `neon-drift-ascension`)
+- `ITCH_IO_CHANNEL` = target channel (example: `html5`)
+
+Final target format used by automation:
+
+`ITCH_IO_USER/ITCH_IO_GAME:ITCH_IO_CHANNEL`
+
+Example:
+
+`yourname/neon-drift-ascension:html5`
+
+### 2) How deploy works
+
+Workflow file: `.github/workflows/deploy-itch.yml`
+
+- packages: `index.html`, `style.css`, `game.js`, `README.md` into `neon-drift.zip`
+- deploys with butler to your itch target
+- runs automatically on pushes to `main`
+- can be manually triggered from Actions tab (`workflow_dispatch`)
+
+### 3) Deploy from prompts
+
+After you add secret/variables once, you can simply prompt:
+
+- "release latest to itch"
+- "publish this update"
+- "ship v1.1"
+
+and I can handle the code/update side while the workflow publishes.
+
 ## PayPal Setup (Payments to Your Account)
 
 The game uses the PayPal JavaScript SDK for checkout.
