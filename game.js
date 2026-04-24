@@ -170,6 +170,8 @@ const state = {
   dailyClaimAt: "",
   lastInviteClaimAt: "",
   adCooldownMatches: 0,
+  runWave: 1,
+  bestWave: 1,
   eventPassLevel: 1,
   eventPassXp: 0,
   comebackEligible: false,
@@ -229,6 +231,7 @@ function saveState() {
     STORAGE_KEY,
     JSON.stringify({
       best: state.best,
+      bestWave: state.bestWave,
       xp: state.xp,
       rank: state.rank,
       credits: state.credits,
@@ -328,7 +331,7 @@ function vaultValue() {
 function updateHud() {
   ui.score.textContent = String(state.score);
   ui.lives.textContent = String(state.lives);
-  ui.round.textContent = String(Math.max(0, state.timeLeft));
+  ui.round.textContent = `W${state.runWave} • ${Math.max(0, state.timeLeft)}`;
   ui.best.textContent = String(state.best);
   ui.credits.textContent = String(state.credits);
   ui.gems.textContent = String(state.gems);
@@ -354,6 +357,7 @@ function renderProfileCard() {
   ui.profileCard.innerHTML = `
     <div><b>User:</b> ${state.userId}</div>
     <div><b>Wins:</b> ${state.wins} / <b>Matches:</b> ${state.matchCount}</div>
+    <div><b>Best Wave:</b> ${state.bestWave}</div>
     <div><b>Equipped Skin:</b> ${skinById(state.inventory.equippedSkin).name}</div>
     <div><b>Premium:</b> ${state.premium ? "Active" : "Free"}</div>
     <div><b>Event Pass:</b> ${state.eventPassPremium ? "Premium Track" : "Free Track"}</div>
@@ -530,7 +534,7 @@ function parseChallengeQuery() {
   }
 }
 
-function updateMissionStats(roundWon) {
+function updateMissionStats(roundWon, wavesCleared = 0) {
   for (const mission of state.missionsForToday) {
     if (mission.type === "bestRoundScore") {
       state.missionLedger.progress[mission.id] = Math.max(missionProgressFor(mission.id), state.score);
@@ -539,7 +543,8 @@ function updateMissionStats(roundWon) {
     } else if (mission.type === "dodges") {
       state.missionLedger.progress[mission.id] = (state.missionLedger.progress[mission.id] || 0) + world.roundDodges;
     } else if (mission.type === "wins") {
-      state.missionLedger.progress[mission.id] = (state.missionLedger.progress[mission.id] || 0) + (roundWon ? 1 : 0);
+      const delta = wavesCleared > 0 ? wavesCleared : roundWon ? 1 : 0;
+      state.missionLedger.progress[mission.id] = (state.missionLedger.progress[mission.id] || 0) + delta;
     }
   }
 }
@@ -574,6 +579,7 @@ function intersects(a, b) {
 function resetRound() {
   state.score = 0;
   state.level = 1;
+  state.runWave = 1;
   state.lives = 3;
   state.timeLeft = state.roundSeconds;
   world.elapsed = 0;
@@ -599,37 +605,62 @@ function startMatch() {
   hideOverlay();
   setStatus("Match started");
   requestAnimationFrame(loop);
-  setTimeout(() => {
-    if (state.running) {
-      state.timeLeft = Math.max(0, state.timeLeft - 1);
-      if (state.timeLeft <= 0) endMatch(state.lives > 0);
-    }
-  }, 1000);
+}
+
+function advanceRunWave() {
+  const clearedWave = state.runWave;
+  state.runWave += 1;
+  state.bestWave = Math.max(state.bestWave, clearedWave);
+  state.timeLeft = state.roundSeconds;
+  world.elapsed = 0;
+  world.spawnClock = 0;
+  world.orbClock = 0;
+  world.hazards = [];
+  world.orbs = [];
+  state.level += 1;
+
+  const depthMultiplier = 1 + clearedWave * 0.18;
+  const waveCredits = Math.floor(55 * depthMultiplier);
+  const waveXp = Math.floor(35 * depthMultiplier);
+  state.credits += waveCredits;
+  grantXp(waveXp);
+  if (clearedWave % 3 === 0) {
+    state.inventory.streetCrates += 1;
+    rewardPop(`Wave ${clearedWave} milestone: +1 Street Crate`);
+  } else {
+    rewardPop(`Wave ${clearedWave} cleared: +${waveCredits} credits, +${waveXp} XP`);
+  }
+  setStatus(`Wave ${state.runWave} started. Rewards scale with depth.`);
+  updateHud();
 }
 
 function endMatch(win) {
   if (!state.running) return;
   state.running = false;
   state.matchCount += 1;
-  if (win) state.wins += 1;
+  const wavesCleared = Math.max(0, state.runWave - 1);
+  const finalWave = Math.max(1, state.runWave);
+  if (wavesCleared > 0) state.wins += wavesCleared;
+  state.bestWave = Math.max(state.bestWave, finalWave);
   state.best = Math.max(state.best, state.score);
   state.metrics.bestRoundScore = Math.max(state.metrics.bestRoundScore, state.score);
   state.metrics.totalOrbs += world.roundOrbs;
   state.metrics.totalDodges += world.roundDodges;
-  const credits = Math.floor(state.score / 5) + (win ? 130 : 60);
-  const xp = Math.floor(state.score / 7) + (win ? 90 : 45);
+  const depthMultiplier = 1 + Math.max(0, finalWave - 1) * 0.34;
+  const credits = Math.floor((state.score / 5 + 75 + finalWave * 45) * depthMultiplier);
+  const xp = Math.floor((state.score / 7 + 60 + finalWave * 28) * depthMultiplier);
   state.credits += credits;
   grantXp(xp);
-  updateMissionStats(win);
-  if (win && (state.score >= 700 || state.level >= 5)) {
+  updateMissionStats(finalWave > 1, wavesCleared);
+  if (Math.random() < Math.min(0.9, 0.08 + finalWave * 0.07)) {
     state.inventory.streetCrates += 1;
     rewardPop("+1 Street Crate");
   }
-  if (win && state.premium && Math.random() < 0.2) {
+  if (state.premium && Math.random() < Math.min(0.75, 0.06 + finalWave * 0.05)) {
     state.inventory.premiumCrates += 1;
     rewardPop("+1 Premium Crate");
   }
-  if (!win && state.matchCount >= 3 && state.wins / Math.max(1, state.matchCount) < 0.25) {
+  if (finalWave <= 2 && state.matchCount >= 3 && state.wins / Math.max(1, state.matchCount) < 0.25) {
     state.comebackEligible = true;
   }
   maybeShowInterstitial();
@@ -638,9 +669,9 @@ function endMatch(win) {
   renderMissions();
   renderProfileCard();
   renderCollection();
-  setStatus(win ? `Win! +${credits} credits +${xp} XP` : `Loss. +${credits} credits +${xp} XP`);
-  showOverlay("Round Complete", "Instant rematch is ready.");
-  submitScore(state.score, win);
+  setStatus(`Run ended at wave ${finalWave}. +${credits} credits +${xp} XP`);
+  showOverlay("Run Over", `You reached wave ${finalWave}. Instant rematch is ready.`);
+  submitScore(state.score, finalWave > 1);
 }
 
 function maybeShowInterstitial() {
@@ -718,7 +749,7 @@ function updateWorld(dt) {
     world.elapsed = 0;
     state.timeLeft -= 1;
     if (state.timeLeft <= 0) {
-      endMatch(state.lives > 0);
+      advanceRunWave();
       return;
     }
   }
