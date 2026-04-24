@@ -1,146 +1,184 @@
-# Neon Drift: Ascension
+# Neon Drift: Ascension Platform
 
-Neon Drift is a static HTML5 arcade game designed for upload to browser game hubs.
-This version includes a full cosmetic economy with rarity tiers, loot crates, duplicate salvage,
-and optional PayPal gem packs.
+Neon Drift is now structured as a production-style game platform with:
+- a rich Telegram-friendly web frontend,
+- a Node.js + Express backend API,
+- SQLite persistence (easy local start, upgrade path to Postgres),
+- config-driven economy/event/mission tuning,
+- itch.io deployment automation.
 
-## Core Loop
+This foundation covers almost all requested systems. A few parts (real ad network SDKs, live subscription billing, hardened anti-cheat, production tournaments) are scaffolded and require external account/service setup to fully activate.
 
-- Fast dodge gameplay with scaling difficulty.
-- Multi-life runs with armor/block and revive options.
-- Mission board with claimable rewards.
-- Persistent progression:
-  - Credits
-  - Gems
-  - XP / rank
-  - Upgrades (engine, armor, magnet)
-  - Cosmetic inventory
-- Ability buttons and keybinds:
-  - `Boost` (`E`)
-  - `Shield` (`Q`)
-  - `Magnet`
+## 1) Feature Coverage
 
-## Cosmetic Economy (CS-style inspiration)
+### Core game loop
+- 20-second rounds
+- instant results + rematch
+- clear win/loss feedback
+- short-session arcade flow with progression rewards
 
-The game now includes a full skin economy with six rarities:
+### Retention loop
+- daily login rewards + streak tracking
+- visible XP and rank progression
+- rotating missions and reward popups
+- progression tracks and unlockables
 
-- **Common** (green)
-- **Rare** (blue)
-- **Epic** (purple)
-- **Legendary** (gold)
-- **Mythic** (teal)
-- **Godly** (black, extremely rare)
+### Monetization layer
+- cosmetic economy with rarity tiers
+- street/premium loot crates
+- direct rarity purchases with soft currency
+- gem packs (PayPal integration in frontend)
+- premium hooks in profile/state for subscription perks
 
-### Loot crate types
+### Cosmetics + economy
+- 6 rarity tiers:
+  - Common (green)
+  - Rare (blue)
+  - Epic (purple)
+  - Legendary (gold)
+  - Mythic (teal)
+  - Godly (black)
+- godly tuned to be extremely rare
+- duplicate salvage returns rarity-scaled currency
+- inventory + equip + vault value display
 
-- **Street Crate** (earnable + buyable with credits)
-- **Premium Crate** (earnable + buyable with gems)
+### Social + viral hooks
+- Telegram share helper hooks
+- score/rival challenge text generation
+- friend/rival placeholders in profile state
+- leaderboard views with weekly reset concepts
 
-### Drop weighting
+### Missions/events/tournaments
+- rotating missions + premium mission slot model
+- event config system (weekly/seasonal)
+- event pass structure (free + premium track)
+- tournament endpoints + optional paid-entry hooks
 
-Street Crates are tuned to keep top-tier drops scarce:
-- Common: 65.00%
-- Rare: 22.00%
-- Epic: 9.00%
-- Legendary: 3.20%
-- Mythic: 0.75%
-- Godly: **0.05%**
+### Anti-cheat + integrity
+- server score validation logic
+- input sanity checks + suspicious pattern flags
+- lightweight rate limiting
+- device fingerprint field support
+- leaderboard integrity controls scaffold
 
-Premium Crates have better odds but still keep Godly rare:
-- Common: 45.00%
-- Rare: 28.00%
-- Epic: 16.00%
-- Legendary: 8.00%
-- Mythic: 2.70%
-- Godly: **0.30%**
+### Analytics + A/B
+- analytics ingest endpoint
+- basic funnel event logging table
+- user experiment/variant assignment endpoint
 
-### Duplicate handling
+---
 
-Duplicate skin drops are automatically salvaged into credits based on rarity.
-Higher rarity duplicates return significantly higher credit value.
+## 2) Repository Structure
 
-### Acquisition paths
+```text
+.
+├── index.html
+├── style.css
+├── game.js
+├── config/
+│   ├── cosmetics.json
+│   ├── missions.json
+│   ├── events.json
+│   ├── pricing.json
+│   └── xp-curve.json
+├── server/
+│   ├── package.json
+│   ├── sql/
+│   │   └── schema.sql
+│   ├── src/
+│   │   ├── app.js
+│   │   ├── config.js
+│   │   ├── db.js
+│   │   ├── index.js
+│   │   ├── security.js
+│   │   └── telemetry.js
+│   └── tests/
+│       └── smoke.test.js
+├── scripts/
+│   ├── dev.sh
+│   ├── build.sh
+│   └── test.sh
+└── .github/workflows/
+    └── deploy-itch.yml
+```
 
-- Earn crates from gameplay/rank progression.
-- Buy crates using in-game currencies.
-- Buy skins directly by rarity using credits.
-- Equip any owned skin from the Skin Vault.
+---
 
-## Controls
+## 3) Local Development
 
-- Keyboard:
-  - Move: `A` / `D` or `←` / `→`
-  - Pause/Resume: `Space`
-  - Abilities: `E`, `Q`
-- Touch:
-  - Drag left/right on the canvas
+### Prerequisites
+- Node.js 20+
+- npm
 
-## Project Files
+### Install dependencies
 
-- `index.html` - game layout and UI
-- `style.css` - visuals and responsive layout
-- `game.js` - gameplay, progression, cosmetics, crates, and PayPal logic
+```bash
+cd server && npm install
+```
 
-## Run Locally
+### Start backend
+
+```bash
+npm run dev
+```
+
+Backend default: `http://localhost:8787`
+
+### Start frontend (simple static server)
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Then open `http://localhost:8080`.
+Frontend default: `http://localhost:8080`
 
-## Prompt-Only Publishing Automation (GitHub Actions -> itch.io)
+---
 
-You can configure one-time credentials so future deploys happen from prompts.
+## 4) Scripts
 
-### 1) One-time repo setup (GitHub UI)
+From repo root:
 
-Add this secret:
+```bash
+npm run dev
+npm run test
+npm run build
+```
 
-- `ITCH_API_KEY` = your itch.io API key (from https://itch.io/user/settings/api-keys)
+- `dev` starts backend (`server/`)
+- `test` runs backend smoke tests + frontend syntax check
+- `build` packages frontend assets into zip
 
-Add these repository variables:
+---
 
-- `ITCH_IO_USER` = your itch username (example: `yourname`)
-- `ITCH_IO_GAME` = your game slug (example: `neon-drift-ascension`)
-- `ITCH_IO_CHANNEL` = target channel (example: `html5`)
+## 5) Backend API Overview
 
-Final target format used by automation:
+Base URL: `/api`
 
-`ITCH_IO_USER/ITCH_IO_GAME:ITCH_IO_CHANNEL`
+Representative endpoints:
+- `GET /health`
+- `POST /auth/telegram`
+- `POST /score/submit`
+- `GET /leaderboard/global`
+- `POST /analytics/track`
 
-Example:
+These provide a foundation for profile, inventory, missions, events, tournaments, purchases, and analytics.
 
-`yourname/neon-drift-ascension:html5`
+---
 
-### 2) How deploy works
+## 6) Config-Driven Balancing
 
-Workflow file: `.github/workflows/deploy-itch.yml`
+Tune systems without changing code:
+- `config/cosmetics.json` -> skin pool, rarity, salvage
+- `config/missions.json` -> mission definitions and rewards
+- `config/events.json` -> events, passes, themed modifiers
+- `config/pricing.json` -> crate pricing, packs, offers
+- `config/xp-curve.json` -> rank thresholds and XP pacing
 
-- packages: `index.html`, `style.css`, `game.js`, `README.md` into `neon-drift.zip`
-- deploys with butler to your itch target
-- runs automatically on pushes to `main`
-- can be manually triggered from Actions tab (`workflow_dispatch`)
+---
 
-### 3) Deploy from prompts
+## 7) PayPal Setup (Gem Packs)
 
-After you add secret/variables once, you can simply prompt:
-
-- "release latest to itch"
-- "publish this update"
-- "ship v1.1"
-
-and I can handle the code/update side while the workflow publishes.
-
-## PayPal Setup (Payments to Your Account)
-
-The game uses the PayPal JavaScript SDK for checkout.
-
-1. Go to PayPal Developer Dashboard:
-   - https://developer.paypal.com/
-2. Create an app under your PayPal business account.
-3. Copy your **Client ID** (Sandbox for testing, Live for production).
-4. In `game.js`, update:
+In `game.js`:
 
 ```js
 const PAYPAL_CONFIG = {
@@ -150,44 +188,48 @@ const PAYPAL_CONFIG = {
 };
 ```
 
-5. Re-upload your files to your game host.
+Use your PayPal Developer app client ID.
 
-When players purchase packs, funds settle to the PayPal account connected to that client ID.
+Security note:
+- Frontend grants are demo-friendly.
+- For production, verify completed orders server-side before granting premium currency.
 
-### Important payment/security note
+---
 
-This demo is static-only. It grants gems client-side after `onApprove`.
-For production anti-fraud, use a backend to verify orders via PayPal API before granting currency.
+## 8) itch.io Prompt-Only Deployment
 
-## Build Upload Package
+Workflow: `.github/workflows/deploy-itch.yml`
 
-From project root:
+### One-time GitHub setup
 
-```bash
-zip -r neon-drift.zip index.html style.css game.js
-```
+Secret:
+- `ITCH_API_KEY`
 
-## Upload to itch.io
+Variables:
+- `ITCH_IO_USER`
+- `ITCH_IO_GAME`
+- `ITCH_IO_CHANNEL` (optional, defaults to `html5`)
 
-1. Create a new project.
-2. Select **HTML** as project type.
-3. Upload `neon-drift.zip`.
-4. Enable browser play.
-5. Publish.
+After setup, pushing to `main` deploys automatically, and manual dispatch is available in Actions.
 
-Recommended viewport:
-- Width: `960`
-- Height: `640`
+---
 
-## Upload to Newgrounds
+## 9) What Still Requires External Services
 
-1. Start a new HTML5 game submission.
-2. Upload `neon-drift.zip` (with `index.html` at archive root).
-3. Set game dimensions near `960x640`.
-4. Publish.
+These are intentionally scaffolded and need integration credentials/services:
+- real ad network SDK wiring (rewarded/interstitial delivery)
+- production subscription billing/provider sync
+- hardened anti-cheat (server authoritative gameplay + replay proofs)
+- large-scale tournament orchestration and prize payouts
+- production observability stack (hosted logs/metrics/alerts)
 
-## Notes
+---
 
-- Static hosting only (no backend required for demo).
-- Progress is stored in browser localStorage.
-- Keep `index.html` at zip root for platform auto-detection.
+## 10) Deployment Targets
+
+Recommended:
+- Frontend: static host (Cloudflare Pages / Netlify / Vercel static / GitHub Pages)
+- Backend: Render / Railway / Fly.io
+- DB: SQLite for development, Postgres for scale
+
+HTTPS is required for Telegram WebApp production flows.

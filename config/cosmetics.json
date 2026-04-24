@@ -1,0 +1,60 @@
+{
+  "rarities": {
+    "common": { "name": "Common", "color": "#22c55e", "weight": 6500, "salvage": 25, "directCost": 180 },
+    "rare": { "name": "Rare", "color": "#3b82f6", "weight": 2200, "salvage": 80, "directCost": 450 },
+    "epic": { "name": "Epic", "color": "#9333ea", "weight": 900, "salvage": 250, "directCost": 1200 },
+    "legendary": { "name": "Legendary", "color": "#f59e0b", "weight": 320, "salvage": 900, "directCost": 4300 },
+    "mythic": { "name": "Mythic", "color": "#14b8a6", "weight": 75, "salvage": 2800, "directCost": 17000 },
+    "godly": { "name": "Godly", "color": "#111111", "weight": 5, "salvage": 14000, "directCost": 98000 }
+  },
+  "crateOdds": {
+    "street": {
+      "common": 6500,
+      "rare": 2200,
+      "epic": 900,
+      "legendary": 320,
+      "mythic": 75,
+      "godly": 5
+    },
+    "premium": {
+      "common": 4500,
+      "rare": 2800,
+      "epic": 1600,
+      "legendary": 800,
+      "mythic": 270,
+      "godly": 30
+    }
+  },
+  "skins": [
+    { "id": "pulse-runner", "name": "Pulse Runner", "rarity": "common", "body": "#7cf8ae", "glow": "#2dcf74", "animated": false },
+    { "id": "garden-shift", "name": "Garden Shift", "rarity": "common", "body": "#79f09e", "glow": "#2abb65", "animated": false },
+    { "id": "metro-green", "name": "Metro Green", "rarity": "common", "body": "#8fffbe", "glow": "#32c175", "animated": false },
+    { "id": "deep-sonar", "name": "Deep Sonar", "rarity": "rare", "body": "#8eb7ff", "glow": "#3877ef", "animated": false },
+    { "id": "blue-lattice", "name": "Blue Lattice", "rarity": "rare", "body": "#7ba8ff", "glow": "#2f66db", "animated": false },
+    { "id": "arc-racer", "name": "Arc Racer", "rarity": "rare", "body": "#95bcff", "glow": "#4d80e3", "animated": false },
+    { "id": "violet-vortex", "name": "Violet Vortex", "rarity": "epic", "body": "#cc86ff", "glow": "#8e34e6", "animated": false },
+    { "id": "purple-static", "name": "Purple Static", "rarity": "epic", "body": "#c274ff", "glow": "#822ed6", "animated": true },
+    { "id": "night-wisp", "name": "Night Wisp", "rarity": "epic", "body": "#d294ff", "glow": "#9741e9", "animated": true },
+    { "id": "golden-shard", "name": "Golden Shard", "rarity": "legendary", "body": "#ffdf92", "glow": "#efaf34", "animated": true },
+    { "id": "crown-arc", "name": "Crown Arc", "rarity": "legendary", "body": "#ffd66f", "glow": "#dd9928", "animated": true },
+    { "id": "tidal-phantom", "name": "Tidal Phantom", "rarity": "mythic", "body": "#84fff7", "glow": "#20b6b0", "animated": true },
+    { "id": "neon-empress", "name": "Neon Empress", "rarity": "mythic", "body": "#6ff2e8", "glow": "#22a89f", "animated": true },
+    { "id": "void-emperor", "name": "Void Emperor", "rarity": "godly", "body": "#2a2c30", "glow": "#07080a", "animated": true },
+    { "id": "black-halo", "name": "Black Halo", "rarity": "godly", "body": "#232529", "glow": "#030304", "animated": true }
+  ],
+  "emotes": [
+    { "id": "gg", "name": "GG", "cost": 120, "currency": "credits" },
+    { "id": "ez", "name": "Too Easy", "cost": 240, "currency": "credits" },
+    { "id": "hype", "name": "Hype", "cost": 65, "currency": "gems" }
+  ],
+  "trails": [
+    { "id": "spark", "name": "Spark Trail", "cost": 900, "currency": "credits" },
+    { "id": "aurora", "name": "Aurora Trail", "cost": 2800, "currency": "credits" },
+    { "id": "void", "name": "Void Trail", "cost": 95, "currency": "gems" }
+  ],
+  "banners": [
+    { "id": "rookie", "name": "Rookie Banner", "cost": 300, "currency": "credits" },
+    { "id": "cosmic", "name": "Cosmic Banner", "cost": 1500, "currency": "credits" },
+    { "id": "founders", "name": "Founders Banner", "cost": 120, "currency": "gems" }
+  ]
+}

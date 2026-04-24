@@ -1,0 +1,11 @@
+{
+  "name": "neon-drift-ascension",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Arcade game frontend with backend services and config-driven economy",
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "build": "bash scripts/build.sh",
+    "test": "bash scripts/test.sh"
+  }
+}

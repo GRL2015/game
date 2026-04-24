@@ -1,0 +1,43 @@
+{
+  "season": {
+    "id": "season-cosmic-01",
+    "name": "Cosmic Clash",
+    "startsAt": "2026-04-01T00:00:00.000Z",
+    "endsAt": "2026-06-30T23:59:59.000Z",
+    "freeTrack": [
+      { "tier": 1, "reward": { "credits": 150 } },
+      { "tier": 2, "reward": { "streetCrates": 1 } },
+      { "tier": 3, "reward": { "xpBoosters": 1 } },
+      { "tier": 4, "reward": { "credits": 300 } }
+    ],
+    "premiumTrack": [
+      { "tier": 1, "reward": { "gems": 60 } },
+      { "tier": 2, "reward": { "premiumCrates": 1 } },
+      { "tier": 3, "reward": { "cosmeticSkinId": "golden-shard" } },
+      { "tier": 4, "reward": { "premiumBadge": "COSMIC_VETERAN" } }
+    ]
+  },
+  "weeklyEvents": [
+    {
+      "id": "double-xp-weekend",
+      "name": "Double XP Weekend",
+      "type": "modifier",
+      "startsAt": "2026-05-01T00:00:00.000Z",
+      "endsAt": "2026-05-03T23:59:59.000Z",
+      "rules": {
+        "xpMultiplier": 2
+      }
+    },
+    {
+      "id": "meteor-storm",
+      "name": "Meteor Storm",
+      "type": "mode",
+      "startsAt": "2026-05-08T00:00:00.000Z",
+      "endsAt": "2026-05-10T23:59:59.000Z",
+      "rules": {
+        "hazardSpawnMultiplier": 1.2,
+        "rewardMultiplier": 1.25
+      }
+    }
+  ]
+}

@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Neon Drift: Ascension</title>
+  <title>Nova Blitz Arena</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <main class="app">
     <header class="top-bar">
       <div>
-        <h1>Neon Drift: Ascension</h1>
-        <p class="subtitle">Fast arcade runs, meaningful progression, and optional premium support.</p>
+        <h1>Nova Blitz Arena</h1>
+        <p class="subtitle">Short rounds. High replay. Cosmetic flex economy.</p>
       </div>
       <div class="stats" aria-live="polite">
         <div class="stat"><span class="label">Score</span><span class="value" id="scoreValue">0</span></div>
         <div class="stat"><span class="label">Lives</span><span class="value" id="livesValue">3</span></div>
-        <div class="stat"><span class="label">Level</span><span class="value" id="levelValue">1</span></div>
+        <div class="stat"><span class="label">Round</span><span class="value" id="roundValue">20</span></div>
         <div class="stat"><span class="label">Best</span><span class="value" id="bestValue">0</span></div>
       </div>
     </header>
@@ -26,32 +26,36 @@
         <span>Credits: <b id="creditsValue">0</b></span>
         <span>Gems: <b id="gemsValue">0</b></span>
         <span>Rank: <b id="rankValue">1</b></span>
-        <span>XP: <b id="xpValue">0</b></span>
+        <span>XP: <b id="xpValue">0/100</b></span>
+        <span>Premium: <b id="premiumValue">No</b></span>
       </div>
-      <div class="status-pill" id="statusPill">Ready to launch.</div>
+      <div class="status-pill" id="statusPill">Ready to queue.</div>
+    </section>
+
+    <section class="xp-track">
+      <div class="xp-bar">
+        <div id="xpFill" class="xp-fill"></div>
+      </div>
+      <div class="xp-meta">
+        <span id="dailyStreakLabel">Streak: 0</span>
+        <button id="dailyClaimBtn" class="button small-button" type="button">Claim Daily</button>
+      </div>
     </section>
 
     <section class="canvas-panel">
-      <canvas
-        id="gameCanvas"
-        width="920"
-        height="520"
-        role="img"
-        aria-label="Neon Drift gameplay area"
-      ></canvas>
+      <canvas id="gameCanvas" width="920" height="460" role="img" aria-label="Nova Blitz gameplay area"></canvas>
       <div class="overlay" id="overlay">
-        <p id="overlayTitle" class="overlay-title">Thread the neon lanes.</p>
+        <p id="overlayTitle" class="overlay-title">20-second blitz rounds.</p>
         <p id="overlayText" class="overlay-text">
-          Move with A / D or arrow keys. On touch, drag left/right. Dodge meteors,
-          collect orbs, complete missions, and upgrade your pilot.
+          Move with A/D or arrows. Touch-drag on mobile. Collect orbs, dodge hazards, and stack rewards.
         </p>
       </div>
     </section>
 
     <section class="controls">
-      <button id="startButton" class="button primary" type="button">Start Run</button>
+      <button id="startButton" class="button primary" type="button">Start Match</button>
       <button id="pauseButton" class="button" type="button" disabled>Pause</button>
-      <button id="restartButton" class="button" type="button" disabled>Restart</button>
+      <button id="rematchButton" class="button fast-rematch" type="button" disabled>Instant Rematch</button>
       <button id="abilityBoostButton" class="button" type="button" disabled>Boost (E)</button>
       <button id="abilityShieldButton" class="button" type="button" disabled>Shield (Q)</button>
       <button id="abilityMagnetButton" class="button" type="button" disabled>Magnet</button>
@@ -59,41 +63,35 @@
 
     <section class="dashboard">
       <article class="panel">
-        <h2>Mission Board</h2>
+        <h2>Daily Missions</h2>
         <ul id="missionList" class="mission-list"></ul>
       </article>
 
       <article class="panel">
-        <h2>Upgrade Garage (Credits)</h2>
-        <div class="shop-grid" id="upgradeShop">
-          <button id="upgradeEngineBtn" class="shop-btn" type="button" data-upgrade="engine">Engine + Speed</button>
-          <button id="upgradeArmorBtn" class="shop-btn" type="button" data-upgrade="armor">Armor + Safety</button>
-          <button id="upgradeMagnetBtn" class="shop-btn" type="button" data-upgrade="magnet">Magnet + Orbit</button>
+        <h2>Shop</h2>
+        <div class="shop-grid">
+          <button id="upgradeEngineBtn" class="shop-btn" type="button">Engine Upgrade</button>
+          <button id="upgradeArmorBtn" class="shop-btn" type="button">Armor Upgrade</button>
+          <button id="upgradeMagnetBtn" class="shop-btn" type="button">Magnet Upgrade</button>
+          <button id="buyStreetCrateBtn" class="shop-btn" type="button">Buy Street Crate</button>
+          <button id="buyPremiumCrateBtn" class="shop-btn" type="button">Buy Premium Crate</button>
+          <button id="buyStarterPackBtn" class="shop-btn" type="button">Starter Pack Bonus</button>
         </div>
-        <h3 class="panel-subtitle">Direct Skin Buys (Credits)</h3>
-        <div class="rarity-buy-grid">
-          <button class="shop-btn rarity-common" type="button" data-buy-rarity="common">Buy Common</button>
-          <button class="shop-btn rarity-rare" type="button" data-buy-rarity="rare">Buy Rare</button>
-          <button class="shop-btn rarity-epic" type="button" data-buy-rarity="epic">Buy Epic</button>
-          <button class="shop-btn rarity-legendary" type="button" data-buy-rarity="legendary">Buy Legendary</button>
-          <button class="shop-btn rarity-mythic" type="button" data-buy-rarity="mythic">Buy Mythic</button>
-          <button class="shop-btn rarity-godly" type="button" data-buy-rarity="godly">Buy Godly</button>
-        </div>
-        <p class="panel-note">Skins are earnable from gameplay crates or bought directly with in-game credits.</p>
+        <div id="rotatingShop" class="rotating-shop"></div>
       </article>
 
       <article class="panel">
-        <h2>Loot Box Economy</h2>
+        <h2>Loot Economy</h2>
         <div class="crate-stats">
-          <span>Street Crates: <b id="streetCratesValue">0</b></span>
-          <span>Premium Crates: <b id="premiumCratesValue">0</b></span>
+          <span>Street: <b id="streetCratesValue">0</b></span>
+          <span>Premium: <b id="premiumCratesValue">0</b></span>
           <span>Vault Value: <b id="vaultValue">0</b></span>
         </div>
         <div class="shop-grid">
           <button id="openStreetCrateBtn" class="shop-btn" type="button">Open Street Crate</button>
           <button id="openPremiumCrateBtn" class="shop-btn" type="button">Open Premium Crate</button>
-          <button id="buyStreetCrateBtn" class="shop-btn" type="button">Buy Street Crate</button>
-          <button id="buyPremiumCrateBtn" class="shop-btn" type="button">Buy Premium Crate</button>
+          <button id="buyEventPassBtn" class="shop-btn" type="button">Event Pass</button>
+          <button id="buyPremiumSubBtn" class="shop-btn" type="button">Premium Subscription</button>
         </div>
         <div class="rarity-legend">
           <span class="rarity-chip rarity-common">Common</span>
@@ -103,51 +101,45 @@
           <span class="rarity-chip rarity-mythic">Mythic</span>
           <span class="rarity-chip rarity-godly">Godly</span>
         </div>
-        <div class="drop-result" id="dropResult">Open a crate to reveal a cosmetic drop.</div>
-        <p class="panel-note">
-          Duplicate drops are automatically salvaged into credits based on rarity. Godly drops are extremely rare.
-        </p>
+        <div class="drop-result" id="dropResult">Open crates for drops. Duplicates auto-salvage into credits.</div>
       </article>
 
       <article class="panel">
-        <h2>Skin Vault</h2>
+        <h2>Profile & Inventory</h2>
+        <div id="profileCard" class="profile-card"></div>
         <ul id="collectionList" class="collection-list"></ul>
-        <p class="panel-note">Equip any owned skin. Rarer drops carry higher salvage and collection value.</p>
       </article>
 
       <article class="panel">
-        <h2>Premium Store (Optional Gems)</h2>
-        <div class="premium-grid">
-          <button id="buyReviveBtn" class="gem-btn" type="button" data-gem-item="revive">Revive Token (60 gems)</button>
-          <button id="buySkinBtn" class="gem-btn" type="button" data-gem-item="skin">Unlock Neon Skin (140 gems)</button>
-          <button id="buyBoosterBtn" class="gem-btn" type="button" data-gem-item="boost">XP Booster (90 gems)</button>
+        <h2>Social & Leaderboard</h2>
+        <div id="leaderboardList" class="leaderboard-list"></div>
+        <div class="shop-grid">
+          <button id="shareScoreBtn" class="shop-btn" type="button">Share Score</button>
+          <button id="challengeFriendBtn" class="shop-btn" type="button">Challenge Friend</button>
+          <button id="inviteRewardBtn" class="shop-btn" type="button">Invite Reward</button>
+          <button id="joinTournamentBtn" class="shop-btn" type="button">Join Weekly Tournament</button>
         </div>
+      </article>
 
-        <p class="panel-note">
-          Payments go to your PayPal account linked to your PayPal REST app client ID in <code>game.js</code>.
-        </p>
+      <article class="panel">
+        <h2>Monetization</h2>
+        <div class="premium-grid">
+          <button id="watchRewardAdBtn" class="gem-btn" type="button">Rewarded Ad: x2 XP</button>
+          <button id="buyReviveBtn" class="gem-btn" type="button">Revive Token (60 gems)</button>
+          <button id="buyBoosterBtn" class="gem-btn" type="button">XP Booster (90 gems)</button>
+          <button id="buySkinBtn" class="gem-btn" type="button">Premium Skin (140 gems)</button>
+        </div>
         <div class="pack-list">
-          <div class="pack-card">
-            <div><b>100 Gems</b><span>$2.99</span></div>
-            <div id="paypal-pack-starter" class="paypal-slot"></div>
-          </div>
-          <div class="pack-card">
-            <div><b>250 Gems</b><span>$6.99</span></div>
-            <div id="paypal-pack-racer" class="paypal-slot"></div>
-          </div>
-          <div class="pack-card">
-            <div><b>700 Gems</b><span>$14.99</span></div>
-            <div id="paypal-pack-legend" class="paypal-slot"></div>
-          </div>
+          <div class="pack-card"><div><b>100 Gems</b><span>$2.99</span></div><div id="paypal-pack-starter" class="paypal-slot"></div></div>
+          <div class="pack-card"><div><b>250 Gems</b><span>$6.99</span></div><div id="paypal-pack-racer" class="paypal-slot"></div></div>
+          <div class="pack-card"><div><b>700 Gems</b><span>$14.99</span></div><div id="paypal-pack-legend" class="paypal-slot"></div></div>
         </div>
         <p id="paypalStatus" class="panel-note"></p>
       </article>
     </section>
 
     <footer>
-      <p>
-        Upload-ready static browser game with cosmetic rarity economy and optional PayPal support.
-      </p>
+      <p>Frontend + backend-ready architecture for events, tournaments, missions, and monetization loops.</p>
     </footer>
   </main>
 

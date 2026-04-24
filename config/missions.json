@@ -1,0 +1,56 @@
+{
+  "dailyMissions": [
+    {
+      "id": "daily-score-700",
+      "title": "Score 700 in one round",
+      "target": 700,
+      "type": "runScore",
+      "reward": {
+        "credits": 220,
+        "xp": 75
+      }
+    },
+    {
+      "id": "daily-dodge-220",
+      "title": "Dodge 220 meteors",
+      "target": 220,
+      "type": "totalDodges",
+      "reward": {
+        "credits": 210,
+        "xp": 70
+      }
+    },
+    {
+      "id": "daily-orbs-70",
+      "title": "Collect 70 orbs",
+      "target": 70,
+      "type": "totalOrbs",
+      "reward": {
+        "credits": 200,
+        "xp": 65
+      }
+    },
+    {
+      "id": "daily-win-streak",
+      "title": "Complete 6 rounds",
+      "target": 6,
+      "type": "roundsPlayed",
+      "reward": {
+        "credits": 160,
+        "xp": 60
+      }
+    }
+  ],
+  "premiumMission": {
+    "id": "premium-perfect-run",
+    "title": "Score 1200 with 2+ lives left",
+    "target": 1200,
+    "type": "premiumScoreCondition",
+    "reward": {
+      "credits": 500,
+      "xp": 180,
+      "premiumCrates": 1
+    }
+  },
+  "dailyRefresh": "local-midnight"
+}

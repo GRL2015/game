@@ -12,6 +12,7 @@
   --gem: #8de1ff;
   --coin: #ffd970;
   --shadow: rgba(0, 0, 0, 0.35);
+  --accent: #7fd9ff;
 }
 
 * {
@@ -36,7 +37,7 @@ body {
 }
 
 .app {
-  width: min(1100px, 100%);
+  width: min(1200px, 100%);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent), var(--card);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -61,6 +62,12 @@ h1 {
   display: flex;
   gap: 0.65rem;
   flex-wrap: wrap;
+}
+
+.subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--subtext);
+  font-size: 0.9rem;
 }
 
 .stat {
@@ -171,6 +178,45 @@ canvas {
   gap: 0.85rem;
 }
 
+.dashboard-primary {
+  grid-column: span 3;
+}
+
+.dashboard-side {
+  grid-column: span 1;
+}
+
+.tab-bar {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.tab-btn {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 0.42rem 0.65rem;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  border-color: rgba(127, 217, 255, 0.7);
+  background: rgba(127, 217, 255, 0.17);
+  color: var(--accent);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
 .panel {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -181,6 +227,12 @@ canvas {
 .panel h2 {
   margin: 0 0 0.45rem;
   font-size: 1.02rem;
+}
+
+.panel-subtitle {
+  margin: 0.65rem 0 0.35rem;
+  font-size: 0.9rem;
+  color: var(--subtext);
 }
 
 .panel-subtitle {
@@ -253,6 +305,14 @@ canvas {
   padding: 0.48rem 0.62rem;
   font-size: 0.85rem;
   cursor: pointer;
+}
+
+.shop-btn:disabled,
+.gem-btn:disabled,
+.crate-btn:disabled,
+.tab-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .shop-btn:hover,
@@ -372,6 +432,160 @@ canvas {
   border-radius: 999px;
   font-weight: 700;
   color: #fff;
+}
+
+.rarity-buy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+
+.crate-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  color: var(--subtext);
+  font-size: 0.84rem;
+}
+
+.rarity-legend {
+  margin-top: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.36rem;
+}
+
+.rarity-chip {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.2rem 0.45rem;
+  color: #fff;
+}
+
+.drop-result {
+  margin-top: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 0.42rem 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.84rem;
+}
+
+.collection-list {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.34rem;
+  max-height: 340px;
+  overflow: auto;
+}
+
+.collection-item {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 0.42rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.42rem;
+  align-items: center;
+}
+
+.collection-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.collection-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  display: inline-block;
+}
+
+.collection-text {
+  min-width: 0;
+}
+
+.collection-meta {
+  font-size: 0.75rem;
+}
+
+.small-button {
+  padding: 0.36rem 0.56rem;
+  font-size: 0.78rem;
+}
+
+.leaderboard-list,
+.rival-list,
+.notif-list,
+.analytics-list,
+.ab-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1rem;
+  color: var(--subtext);
+  font-size: 0.83rem;
+}
+
+.reward-pop {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  border: 1px solid rgba(98, 230, 164, 0.5);
+  background: rgba(98, 230, 164, 0.14);
+  color: var(--good);
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transform: translateY(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.reward-pop.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.xp-track {
+  margin-top: 0.5rem;
+}
+
+.xp-track-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.xp-track-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #5eb6ff, #7fffb1);
+  transition: width 140ms ease;
+}
+
+.timer-chip {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 0.26rem 0.48rem;
+  font-size: 0.78rem;
+  color: var(--subtext);
+}
+
+.social-actions {
+  margin-top: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 .rarity-common {
@@ -579,8 +793,17 @@ code {
     grid-template-columns: 1fr;
   }
 
+  .dashboard-primary,
+  .dashboard-side {
+    grid-column: span 1;
+  }
+
   .pack-card {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .rarity-buy-grid {
+    grid-template-columns: 1fr;
   }
 }

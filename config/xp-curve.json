@@ -1,0 +1,6 @@
+{
+  "baseXpForRank": 80,
+  "rankStep": 65,
+  "maxRankForTable": 120,
+  "doubleXpWeekendMultiplier": 2.0
+}

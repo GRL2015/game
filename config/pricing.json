@@ -1,0 +1,44 @@
+{
+  "currencyPacks": [
+    { "id": "pack-small", "gems": 100, "usd": 2.99 },
+    { "id": "pack-medium", "gems": 250, "usd": 6.99 },
+    { "id": "pack-large", "gems": 700, "usd": 14.99 }
+  ],
+  "starterPack": {
+    "id": "starter-pack",
+    "usd": 4.99,
+    "contents": {
+      "gems": 350,
+      "streetCrates": 2,
+      "premiumCrates": 1,
+      "xpBoosters": 2
+    },
+    "firstPurchaseBonus": true
+  },
+  "subscription": {
+    "id": "premium-plus",
+    "usdMonthly": 5.99,
+    "perks": [
+      "No ads",
+      "Premium badge",
+      "Double XP",
+      "Premium tournaments",
+      "Premium loot boxes",
+      "Profile cosmetics",
+      "Ghost replays",
+      "Instant retry",
+      "Skip timers",
+      "Extra rival slots",
+      "Premium event track"
+    ]
+  },
+  "lootBoxes": {
+    "streetCrateCreditCost": 420,
+    "premiumCrateGemCost": 55
+  },
+  "boosts": [
+    { "id": "boost-double-xp", "gemCost": 90, "durationMinutes": 30 },
+    { "id": "boost-extra-attempt", "gemCost": 75, "durationMatches": 3 },
+    { "id": "boost-score-multiplier", "gemCost": 110, "durationMinutes": 20 }
+  ]
+}
