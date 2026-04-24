@@ -124,6 +124,30 @@
       </article>
 
       <article class="panel">
+        <h2>Skin Market (CS-style)</h2>
+        <p class="panel-note">Tradable serial cosmetics with wear values. Rare patterns are highly sought after.</p>
+        <div class="shop-grid">
+          <input id="tradePartnerInput" class="shop-input" type="text" placeholder="target user id" />
+          <input id="tradeAssetInput" class="shop-input" type="text" placeholder="your asset id" />
+          <input id="tradeWantsInput" class="shop-input" type="text" placeholder="wanted asset id (optional)" />
+          <button id="createTradeBtn" class="shop-btn" type="button">Create Trade Offer</button>
+          <input id="acceptTradeInput" class="shop-input" type="text" placeholder="trade offer id" />
+          <button id="acceptTradeBtn" class="shop-btn" type="button">Accept Trade</button>
+        </div>
+        <div id="tradeFeed" class="drop-result">No active trade activity.</div>
+        <h3 class="panel-subtitle">Skin Duel (Winner Takes All)</h3>
+        <div class="shop-grid">
+          <input id="duelOpponentInput" class="shop-input" type="text" placeholder="opponent user id" />
+          <input id="duelYourAssetInput" class="shop-input" type="text" placeholder="your staked asset id" />
+          <input id="duelOpponentAssetInput" class="shop-input" type="text" placeholder="opponent staked asset id" />
+          <button id="createDuelBtn" class="shop-btn" type="button">Create Duel</button>
+          <input id="resolveDuelInput" class="shop-input" type="text" placeholder="duel id to resolve" />
+          <button id="resolveDuelBtn" class="shop-btn" type="button">Resolve Duel</button>
+        </div>
+        <div id="duelFeed" class="drop-result">No duel activity.</div>
+      </article>
+
+      <article class="panel">
         <h2>Social & Leaderboard</h2>
         <div id="leaderboardList" class="leaderboard-list"></div>
         <h3 class="panel-subtitle">Friends & Rivals</h3>

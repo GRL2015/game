@@ -58,3 +58,71 @@ test("purchase verify accepts valid signature", async () => {
   assert.equal(res.body.ok, true);
   assert.equal(typeof res.body.verified, "boolean");
 });
+
+test("skin trade and duel settlement works", async () => {
+  const app = createApp();
+  await request(app).post("/api/auth/session").send({
+    userId: "trade-user-a",
+    username: "trade_a",
+    fingerprint: "fingerprint-trade-a",
+  });
+  await request(app).post("/api/auth/session").send({
+    userId: "trade-user-b",
+    username: "trade_b",
+    fingerprint: "fingerprint-trade-b",
+  });
+
+  const grantA = await request(app).post("/api/skins/grant").send({
+    userId: "trade-user-a",
+    skinId: "void-emperor",
+    rarity: "godly",
+    source: "test",
+  });
+  const grantB = await request(app).post("/api/skins/grant").send({
+    userId: "trade-user-b",
+    skinId: "golden-shard",
+    rarity: "legendary",
+    source: "test",
+  });
+  assert.equal(grantA.status, 200);
+  assert.equal(grantB.status, 200);
+
+  const offer = await request(app).post("/api/trade/create").send({
+    fromUserId: "trade-user-a",
+    toUserId: "trade-user-b",
+    offeredSkinInstanceId: grantA.body.instance.id,
+    requestedSkinInstanceId: grantB.body.instance.id,
+  });
+  assert.equal(offer.status, 200);
+
+  const accept = await request(app).post("/api/trade/accept").send({
+    offerId: offer.body.offer.id,
+    userId: "trade-user-b",
+  });
+  assert.equal(accept.status, 200);
+  assert.equal(accept.body.ok, true);
+
+  const invA = await request(app).get("/api/skins/inventory/trade-user-a");
+  const invB = await request(app).get("/api/skins/inventory/trade-user-b");
+  assert.equal(invA.status, 200);
+  assert.equal(invB.status, 200);
+  const aTradeSkin = invA.body.items.find((item) => item.skin_id === "golden-shard");
+  const bTradeSkin = invB.body.items.find((item) => item.skin_id === "void-emperor");
+  assert.equal(Boolean(aTradeSkin), true);
+  assert.equal(Boolean(bTradeSkin), true);
+
+  const duel = await request(app).post("/api/duel/create").send({
+    challengerUserId: "trade-user-b",
+    opponentUserId: "trade-user-a",
+    challengerSkinInstanceId: bTradeSkin.id,
+    opponentSkinInstanceId: aTradeSkin.id,
+  });
+  assert.equal(duel.status, 200);
+
+  const resolve = await request(app).post("/api/duel/resolve").send({
+    duelId: duel.body.duel.id,
+  });
+  assert.equal(resolve.status, 200);
+  assert.equal(resolve.body.ok, true);
+  assert.equal(typeof resolve.body.winnerUserId, "string");
+});

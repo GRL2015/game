@@ -41,6 +41,225 @@ function getUserByPublicId(db, publicId) {
   return db.prepare("SELECT * FROM users WHERE tg_user_id = ?").get(String(publicId));
 }
 
+const SKIN_RARITY_BY_ID = {
+  "pulse-runner": "common",
+  "garden-shift": "common",
+  "deep-sonar": "rare",
+  "blue-lattice": "rare",
+  "violet-vortex": "epic",
+  "purple-static": "epic",
+  "golden-shard": "legendary",
+  "crown-arc": "legendary",
+  "tidal-phantom": "mythic",
+  "neon-empress": "mythic",
+  "void-emperor": "godly",
+  "black-halo": "godly",
+};
+
+const RARITY_BASE_VALUE = {
+  common: 120,
+  rare: 700,
+  epic: 4200,
+  legendary: 26000,
+  mythic: 180000,
+  godly: 1500000,
+};
+
+function wearTierFromFloat(floatValue) {
+  if (floatValue <= 0.07) return "Factory New";
+  if (floatValue <= 0.15) return "Minimal Wear";
+  if (floatValue <= 0.38) return "Field-Tested";
+  if (floatValue <= 0.45) return "Well-Worn";
+  return "Battle-Scarred";
+}
+
+function normalizeRarity(rarity, skinId) {
+  if (rarity && RARITY_BASE_VALUE[rarity]) return rarity;
+  return SKIN_RARITY_BY_ID[skinId] || "common";
+}
+
+function rarityValueWithWear(rarity, floatValue) {
+  const base = RARITY_BASE_VALUE[rarity] || RARITY_BASE_VALUE.common;
+  const wearBonus = 1.35 - floatValue * 0.45;
+  return Math.max(10, Math.round(base * wearBonus));
+}
+
+function recountSkinQty(db, userId, skinId) {
+  const row = db
+    .prepare("SELECT COUNT(*) AS qty FROM skin_instances WHERE user_id = ? AND skin_id = ?")
+    .get(userId, skinId);
+  const qty = Number(row?.qty || 0);
+  if (qty <= 0) {
+    db.prepare("DELETE FROM inventories WHERE user_id = ? AND item_type = 'skin' AND item_id = ?").run(userId, skinId);
+    return;
+  }
+  db.prepare(
+    `INSERT INTO inventories (user_id, item_type, item_id, qty, equipped, metadata)
+     VALUES (?, 'skin', ?, ?, 0, NULL)
+     ON CONFLICT(user_id, item_type, item_id) DO UPDATE SET qty = excluded.qty`
+  ).run(userId, skinId, qty);
+}
+
+function mintSkinInstance(db, { userId, skinId, rarity, source }) {
+  const normalizedRarity = normalizeRarity(rarity, skinId);
+  const floatValue = Number(Math.random().toFixed(5));
+  const wearTier = wearTierFromFloat(floatValue);
+  const baseValue = rarityValueWithWear(normalizedRarity, floatValue);
+  const instanceId = randomUUID();
+  db.prepare(
+    `INSERT INTO skin_instances
+      (id, user_id, skin_id, rarity, float_value, wear_tier, base_value, tradable, locked, lock_reason, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0, NULL, ?)`
+  ).run(instanceId, userId, skinId, normalizedRarity, floatValue, wearTier, baseValue, nowIso());
+  recountSkinQty(db, userId, skinId);
+  const instance = db.prepare("SELECT * FROM skin_instances WHERE id = ?").get(instanceId);
+  logEvent({
+    db,
+    userId,
+    eventName: "cosmetic.instance.minted",
+    properties: { instanceId, skinId, rarity: normalizedRarity, wearTier, baseValue, source: source || "unknown" },
+    sessionId: randomUUID(),
+  });
+  return instance;
+}
+
+function ensureStarterSkin(db, userId) {
+  const row = db.prepare("SELECT COUNT(*) AS qty FROM skin_instances WHERE user_id = ?").get(userId);
+  if (Number(row?.qty || 0) > 0) return;
+  mintSkinInstance(db, { userId, skinId: "pulse-runner", rarity: "common", source: "starter" });
+}
+
+function getTradableSkinForUser(db, userId, instanceId) {
+  return db.prepare(
+    `SELECT *
+     FROM skin_instances
+     WHERE id = ? AND user_id = ? AND tradable = 1 AND locked = 0`
+  ).get(String(instanceId), userId);
+}
+
+const SKIN_POOL = [
+  { skinId: "pulse-runner", rarity: "common" },
+  { skinId: "garden-shift", rarity: "common" },
+  { skinId: "deep-sonar", rarity: "rare" },
+  { skinId: "blue-lattice", rarity: "rare" },
+  { skinId: "violet-vortex", rarity: "epic" },
+  { skinId: "purple-static", rarity: "epic" },
+  { skinId: "golden-shard", rarity: "legendary" },
+  { skinId: "crown-arc", rarity: "legendary" },
+  { skinId: "tidal-phantom", rarity: "mythic" },
+  { skinId: "neon-empress", rarity: "mythic" },
+  { skinId: "void-emperor", rarity: "godly" },
+  { skinId: "black-halo", rarity: "godly" },
+];
+
+function rarityBaseValue(rarity) {
+  const table = {
+    common: 120,
+    rare: 450,
+    epic: 1600,
+    legendary: 7800,
+    mythic: 28000,
+    godly: 160000,
+  };
+  return table[String(rarity)] || 100;
+}
+
+function wearTier(floatValue) {
+  if (floatValue < 0.07) return "Factory New";
+  if (floatValue < 0.15) return "Minimal Wear";
+  if (floatValue < 0.38) return "Field-Tested";
+  if (floatValue < 0.45) return "Well-Worn";
+  return "Battle-Scarred";
+}
+
+function createSkinInstance(db, userId, skinId, rarity, source = "seed") {
+  const floatValue = Number(Math.random().toFixed(5));
+  const id = randomUUID();
+  db.prepare(
+    `INSERT INTO skin_instances
+     (id, user_id, skin_id, rarity, float_value, wear_tier, base_value, tradable, locked, lock_reason, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0, NULL, ?)`
+  ).run(id, userId, skinId, rarity, floatValue, wearTier(floatValue), rarityBaseValue(rarity), nowIso());
+  return db.prepare("SELECT * FROM skin_instances WHERE id = ?").get(id);
+}
+
+function ensureSeedInventory(db, user) {
+  const existing = db.prepare("SELECT COUNT(*) AS c FROM skin_instances WHERE user_id = ?").get(user.id);
+  if ((existing?.c || 0) > 0) return;
+  const starter = SKIN_POOL.filter((s) => s.rarity === "common").slice(0, 2);
+  const bonus = SKIN_POOL.find((s) => s.rarity === "rare");
+  for (const skin of starter) {
+    createSkinInstance(db, user.id, skin.skinId, skin.rarity, "starter");
+  }
+  if (bonus) createSkinInstance(db, user.id, bonus.skinId, bonus.rarity, "starter");
+}
+
+function rarityMultiplier(rarity) {
+  const table = {
+    common: 1,
+    rare: 2.5,
+    epic: 7,
+    legendary: 24,
+    mythic: 90,
+    godly: 700,
+  };
+  return table[rarity] || 1;
+}
+
+function estimatedSkinValue(metadataRaw) {
+  let metadata = {};
+  try {
+    metadata = JSON.parse(metadataRaw || "{}");
+  } catch {
+    metadata = {};
+  }
+  const rarity = String(metadata.rarity || "common");
+  const wear = Number(metadata.wear || 0.4);
+  const serial = Number(metadata.serial || 99999);
+  const base = 140;
+  const wearBonus = Math.max(0.55, 1.35 - wear);
+  const serialBonus = serial <= 25 ? 4 : serial <= 100 ? 2 : 1;
+  return Math.floor(base * rarityMultiplier(rarity) * wearBonus * serialBonus);
+}
+
+function toPublicSkinRow(row) {
+  if (!row) return null;
+  const rarity = String(row.rarity || "common");
+  const floatValue = Number(row.float_value || 0);
+  return {
+    id: row.id,
+    skinId: row.skin_id,
+    skin_id: row.skin_id,
+    rarity,
+    floatValue,
+    float_value: floatValue,
+    wearTier: row.wear_tier || wearTier(floatValue),
+    wear_tier: row.wear_tier || wearTier(floatValue),
+    baseValue: Number(row.base_value || 0),
+    base_value: Number(row.base_value || 0),
+    estimatedCredits: Math.max(50, Math.floor((row.base_value || rarityBaseValue(rarity)) * (1.12 - floatValue * 0.25))),
+    estimatedUsd: Number(((row.base_value || rarityBaseValue(rarity)) / 220).toFixed(2)),
+    tradable: Number(row.tradable || 0) === 1,
+    locked: Number(row.locked || 0) === 1,
+  };
+}
+
+function getSkinInstance(db, instanceId) {
+  return db.prepare("SELECT * FROM skin_instances WHERE id = ?").get(String(instanceId));
+}
+
+function assertTradableOwnedSkin(db, { userId, instanceId }) {
+  return db.prepare(
+    `SELECT *
+     FROM skin_instances
+     WHERE id = ? AND user_id = ? AND tradable = 1 AND locked = 0`
+  ).get(String(instanceId), userId);
+}
+
+function transferSkin(db, { instanceId, toUserId }) {
+  db.prepare("UPDATE skin_instances SET user_id = ?, locked = 0, lock_reason = NULL WHERE id = ?").run(toUserId, String(instanceId));
+}
+
 function createApp() {
   initDb();
   const db = getDb();
@@ -80,6 +299,7 @@ function createApp() {
          last_login = excluded.last_login`
     ).run(String(userId), username || String(userId), nowIso(), nowIso(), nowIso());
     const user = db.prepare("SELECT * FROM users WHERE tg_user_id = ?").get(String(userId));
+    ensureSeedInventory(db, user);
     const variant = assignVariant(String(userId), "ui-layout");
     const dayKey = new Date().toISOString().slice(0, 10);
     const existingRotation = db.prepare("SELECT payload FROM shop_rotations WHERE user_id = ? AND day_key = ?").get(user.id, dayKey);
@@ -121,6 +341,208 @@ function createApp() {
       comebackRewards: comeback,
       shopRotation: rotation ? JSON.parse(rotation.payload) : [],
       missions: missionState,
+    });
+  });
+
+  app.post("/api/cosmetics/grant", (req, res) => {
+    const { userId, skinId = "pulse-runner", rarity = null, source = "manual-grant" } = req.body || {};
+    if (!userId) return res.status(400).json({ error: "userId required" });
+    const user = getUserByPublicId(db, userId);
+    if (!user) return res.status(404).json({ error: "user not found" });
+    const normalizedRarity = normalizeRarity(rarity, skinId);
+    const instance = mintSkinInstance(db, { userId: user.id, skinId, rarity: normalizedRarity, source });
+    res.json({ ok: true, instance: toPublicSkinRow(instance) });
+  });
+
+  app.post("/api/skins/grant", (req, res, next) => {
+    req.url = "/api/cosmetics/grant";
+    return app._router.handle(req, res, next);
+  });
+
+  app.get("/api/skins/inventory/:userId", (req, res) => {
+    const user = getUserByPublicId(db, req.params.userId);
+    if (!user) return res.status(404).json({ error: "user not found" });
+    ensureSeedInventory(db, user);
+    const rows = db.prepare(
+      `SELECT *
+       FROM skin_instances
+       WHERE user_id = ?
+       ORDER BY base_value DESC, float_value ASC, created_at DESC
+       LIMIT 250`
+    ).all(user.id);
+    const mapped = rows.map(toPublicSkinRow);
+    res.json({ rows: mapped, items: mapped });
+  });
+
+  app.post("/api/trade/create", (req, res) => {
+    const { fromUserId, toUserId, offeredSkinInstanceId, requestedSkinInstanceId } = req.body || {};
+    if (!fromUserId || !toUserId || !offeredSkinInstanceId || !requestedSkinInstanceId) {
+      return res.status(400).json({ error: "fromUserId, toUserId, offeredSkinInstanceId, requestedSkinInstanceId required" });
+    }
+    const fromUser = getUserByPublicId(db, fromUserId);
+    const toUser = getUserByPublicId(db, toUserId);
+    if (!fromUser || !toUser) return res.status(404).json({ error: "user not found" });
+    const offered = assertTradableOwnedSkin(db, { userId: fromUser.id, instanceId: offeredSkinInstanceId });
+    if (!offered) return res.status(400).json({ error: "offered skin unavailable" });
+    const requested = assertTradableOwnedSkin(db, { userId: toUser.id, instanceId: requestedSkinInstanceId });
+    if (!requested) return res.status(400).json({ error: "requested skin unavailable" });
+
+    const offerId = randomUUID();
+    const now = nowIso();
+    db.transaction(() => {
+      db.prepare(
+        `INSERT INTO trade_offers
+         (id, from_user_id, to_user_id, offered_skin_instance_id, requested_skin_instance_id, status, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)`
+      ).run(offerId, fromUser.id, toUser.id, offered.id, requested.id, now, now);
+      db.prepare("UPDATE skin_instances SET locked = 1, lock_reason = ? WHERE id = ?").run(`trade:${offerId}`, offered.id);
+      db.prepare("UPDATE skin_instances SET locked = 1, lock_reason = ? WHERE id = ?").run(`trade:${offerId}`, requested.id);
+    })();
+
+    const offer = db.prepare("SELECT * FROM trade_offers WHERE id = ?").get(offerId);
+    res.json({ ok: true, offer });
+  });
+
+  app.post("/api/market/offer", (req, res) => {
+    req.url = "/api/trade/create";
+    app.handle(req, res);
+  });
+
+  app.post("/api/trade/accept", (req, res) => {
+    const { offerId, userId } = req.body || {};
+    if (!offerId || !userId) return res.status(400).json({ error: "offerId and userId required" });
+    const accepter = getUserByPublicId(db, userId);
+    if (!accepter) return res.status(404).json({ error: "user not found" });
+
+    const offer = db.prepare("SELECT * FROM trade_offers WHERE id = ?").get(String(offerId));
+    if (!offer || offer.status !== "pending") return res.status(404).json({ error: "offer not pending" });
+    if (Number(offer.to_user_id) !== Number(accepter.id)) return res.status(403).json({ error: "not offer target" });
+
+    const offered = getSkinInstance(db, offer.offered_skin_instance_id);
+    const requested = getSkinInstance(db, offer.requested_skin_instance_id);
+    if (!offered || !requested) return res.status(400).json({ error: "skin instances missing" });
+    if (Number(offered.user_id) !== Number(offer.from_user_id) || Number(requested.user_id) !== Number(offer.to_user_id)) {
+      return res.status(400).json({ error: "ownership mismatch" });
+    }
+
+    db.transaction(() => {
+      transferSkin(db, { instanceId: offered.id, toUserId: offer.to_user_id });
+      transferSkin(db, { instanceId: requested.id, toUserId: offer.from_user_id });
+      db.prepare("UPDATE trade_offers SET status = 'accepted', updated_at = ?, resolved_at = ? WHERE id = ?").run(nowIso(), nowIso(), offer.id);
+      recountSkinQty(db, offer.from_user_id, offered.skin_id);
+      recountSkinQty(db, offer.to_user_id, offered.skin_id);
+      recountSkinQty(db, offer.from_user_id, requested.skin_id);
+      recountSkinQty(db, offer.to_user_id, requested.skin_id);
+    })();
+
+    res.json({ ok: true, offerId: offer.id });
+  });
+
+  app.post("/api/market/offer/accept", (req, res) => {
+    req.url = "/api/trade/accept";
+    app.handle(req, res);
+  });
+
+  app.get("/api/trade/incoming/:userId", (req, res) => {
+    const user = getUserByPublicId(db, req.params.userId);
+    if (!user) return res.status(404).json({ error: "user not found" });
+    const rows = db.prepare(
+      `SELECT o.*,
+              sf.skin_id AS offered_skin_id,
+              sf.rarity AS offered_rarity,
+              st.skin_id AS requested_skin_id,
+              st.rarity AS requested_rarity
+       FROM trade_offers o
+       JOIN skin_instances sf ON sf.id = o.offered_skin_instance_id
+       JOIN skin_instances st ON st.id = o.requested_skin_instance_id
+       WHERE o.to_user_id = ? AND o.status = 'pending'
+       ORDER BY o.updated_at DESC
+       LIMIT 100`
+    ).all(user.id);
+    res.json({ rows });
+  });
+
+  app.post("/api/duel/create", (req, res) => {
+    const { challengerUserId, opponentUserId, challengerSkinInstanceId, opponentSkinInstanceId } = req.body || {};
+    if (!challengerUserId || !opponentUserId || !challengerSkinInstanceId || !opponentSkinInstanceId) {
+      return res.status(400).json({ error: "challengerUserId, opponentUserId, challengerSkinInstanceId, opponentSkinInstanceId required" });
+    }
+    const challenger = getUserByPublicId(db, challengerUserId);
+    const opponent = getUserByPublicId(db, opponentUserId);
+    if (!challenger || !opponent) return res.status(404).json({ error: "user not found" });
+
+    const challengerSkin = assertTradableOwnedSkin(db, { userId: challenger.id, instanceId: challengerSkinInstanceId });
+    const opponentSkin = assertTradableOwnedSkin(db, { userId: opponent.id, instanceId: opponentSkinInstanceId });
+    if (!challengerSkin || !opponentSkin) return res.status(400).json({ error: "stake skin unavailable" });
+
+    const duelId = randomUUID();
+    db.transaction(() => {
+      db.prepare(
+        `INSERT INTO skin_duels
+         (id, challenger_user_id, opponent_user_id, challenger_skin_instance_id, opponent_skin_instance_id, status, created_at)
+         VALUES (?, ?, ?, ?, ?, 'pending', ?)`
+      ).run(duelId, challenger.id, opponent.id, challengerSkin.id, opponentSkin.id, nowIso());
+      db.prepare("UPDATE skin_instances SET locked = 1, lock_reason = ? WHERE id = ?").run(`duel:${duelId}`, challengerSkin.id);
+      db.prepare("UPDATE skin_instances SET locked = 1, lock_reason = ? WHERE id = ?").run(`duel:${duelId}`, opponentSkin.id);
+    })();
+
+    const duel = db.prepare("SELECT * FROM skin_duels WHERE id = ?").get(duelId);
+    res.json({ ok: true, duel });
+  });
+
+  app.get("/api/duel/open/:userId", (req, res) => {
+    const user = getUserByPublicId(db, req.params.userId);
+    if (!user) return res.status(404).json({ error: "user not found" });
+    const rows = db.prepare(
+      `SELECT d.*
+       FROM skin_duels d
+       WHERE (d.challenger_user_id = ? OR d.opponent_user_id = ?)
+       ORDER BY d.created_at DESC
+       LIMIT 100`
+    ).all(user.id, user.id);
+    res.json({ rows });
+  });
+
+  app.post("/api/duel/resolve", (req, res) => {
+    const { duelId } = req.body || {};
+    if (!duelId) return res.status(400).json({ error: "duelId required" });
+    const duel = db.prepare("SELECT * FROM skin_duels WHERE id = ?").get(String(duelId));
+    if (!duel || duel.status !== "pending") return res.status(404).json({ error: "duel not pending" });
+    const challengerSkin = getSkinInstance(db, duel.challenger_skin_instance_id);
+    const opponentSkin = getSkinInstance(db, duel.opponent_skin_instance_id);
+    if (!challengerSkin || !opponentSkin) return res.status(400).json({ error: "stake skins missing" });
+
+    const challengerRoll = Number((Math.random() + (challengerSkin.base_value || 1) / Math.max(1, (challengerSkin.base_value || 1) + (opponentSkin.base_value || 1)) * 0.12).toFixed(6));
+    const opponentRoll = Number((Math.random() + (opponentSkin.base_value || 1) / Math.max(1, (challengerSkin.base_value || 1) + (opponentSkin.base_value || 1)) * 0.12).toFixed(6));
+    const winnerUserId = challengerRoll >= opponentRoll ? duel.challenger_user_id : duel.opponent_user_id;
+    const loserSkin = winnerUserId === duel.challenger_user_id ? opponentSkin : challengerSkin;
+
+    db.transaction(() => {
+      transferSkin(db, { instanceId: challengerSkin.id, toUserId: winnerUserId });
+      transferSkin(db, { instanceId: opponentSkin.id, toUserId: winnerUserId });
+      db.prepare(
+        `UPDATE skin_duels
+         SET status = 'resolved',
+             winner_user_id = ?,
+             challenger_roll = ?,
+             opponent_roll = ?,
+             resolved_at = ?
+         WHERE id = ?`
+      ).run(winnerUserId, challengerRoll, opponentRoll, nowIso(), duel.id);
+      recountSkinQty(db, duel.challenger_user_id, challengerSkin.skin_id);
+      recountSkinQty(db, duel.opponent_user_id, challengerSkin.skin_id);
+      recountSkinQty(db, duel.challenger_user_id, opponentSkin.skin_id);
+      recountSkinQty(db, duel.opponent_user_id, opponentSkin.skin_id);
+    })();
+
+    const winnerUser = db.prepare("SELECT tg_user_id FROM users WHERE id = ?").get(winnerUserId);
+    res.json({
+      ok: true,
+      duelId: duel.id,
+      winnerUserId: winnerUser ? winnerUser.tg_user_id : null,
+      challengerRoll,
+      opponentRoll,
+      winnerTakes: toPublicSkinRow(loserSkin),
     });
   });
 

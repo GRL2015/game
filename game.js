@@ -73,6 +73,15 @@ const PAYPAL_CONFIG = {
   },
 };
 
+const SKIN_VALUE_MULTIPLIER = {
+  common: 1,
+  rare: 2.4,
+  epic: 5.5,
+  legendary: 14,
+  mythic: 40,
+  godly: 180,
+};
+
 const ui = {
   canvas: document.getElementById("gameCanvas"),
   overlay: document.getElementById("overlay"),
@@ -117,6 +126,23 @@ const ui = {
   bundleOfferBtn: document.getElementById("bundleOfferBtn"),
   socialCardCanvas: document.getElementById("socialCardCanvas"),
   rivalryList: document.getElementById("rivalryList"),
+  marketListings: document.getElementById("marketListings"),
+  marketOfferUserInput: document.getElementById("marketOfferUserInput"),
+  marketOfferSkinInput: document.getElementById("marketOfferSkinInput"),
+  marketOfferPriceInput: document.getElementById("marketOfferPriceInput"),
+  createOfferBtn: document.getElementById("createOfferBtn"),
+  incomingTrades: document.getElementById("incomingTrades"),
+  acceptTradeInput: document.getElementById("acceptTradeInput"),
+  acceptTradeBtn: document.getElementById("acceptTradeBtn"),
+  tradeFeed: document.getElementById("tradeFeed"),
+  duelOpponentInput: document.getElementById("duelOpponentInput"),
+  duelStakeSkinInput: document.getElementById("duelStakeSkinInput"),
+  duelOpponentSkinInput: document.getElementById("duelOpponentSkinInput"),
+  createDuelBtn: document.getElementById("createDuelBtn"),
+  resolveDuelInput: document.getElementById("resolveDuelInput"),
+  resolveDuelBtn: document.getElementById("resolveDuelBtn"),
+  duelFeed: document.getElementById("duelFeed"),
+  duelHistory: document.getElementById("duelHistory"),
 };
 
 const ctx = ui.canvas.getContext("2d");
@@ -168,6 +194,13 @@ const state = {
   starterOfferShown: false,
   rivals: [],
   friends: [],
+  skinInventory: [],
+  tradeOffers: [],
+  duelMatches: [],
+  marketListings: [],
+  incomingTrades: [],
+  duelHistory: [],
+  skinInventory: [],
   ab: { shopPricing: "A", rewardCurve: "A", missionDifficulty: "A", adFrequency: "A", uiLayout: "A" },
   matchBoosts: {
     xpMultiplier: 1,
@@ -370,6 +403,37 @@ function renderCollection() {
     li.append(left, btn);
     ui.collectionList.appendChild(li);
   }
+}
+
+function allOwnedSkins() {
+  return Object.entries(state.inventory.ownedSkins || {}).flatMap(([skinId, qty]) => {
+    const count = Number(qty || 0);
+    if (count <= 0) return [];
+    return Array.from({ length: count }, (_, idx) => ({
+      skinId,
+      tokenId: `${skinId}#${idx + 1}`,
+      rarity: skinById(skinId).rarity,
+    }));
+  });
+}
+
+function inferSkinFromToken(tokenId) {
+  return String(tokenId || "").split("#")[0] || "";
+}
+
+function applyTokenTransferOut(tokenId) {
+  const skinId = inferSkinFromToken(tokenId);
+  if (!skinId) return false;
+  const current = state.inventory.ownedSkins[skinId] || 0;
+  if (current <= 0) return false;
+  state.inventory.ownedSkins[skinId] = current - 1;
+  return true;
+}
+
+function applyTokenTransferIn(tokenId) {
+  const skinId = inferSkinFromToken(tokenId);
+  if (!skinId) return;
+  state.inventory.ownedSkins[skinId] = (state.inventory.ownedSkins[skinId] || 0) + 1;
 }
 
 function dayKey(d = new Date()) {

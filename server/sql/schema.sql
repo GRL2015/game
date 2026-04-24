@@ -239,6 +239,63 @@ CREATE TABLE IF NOT EXISTS starter_funnel (
   FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS skin_instances (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  skin_id TEXT NOT NULL,
+  rarity TEXT NOT NULL,
+  float_value REAL NOT NULL,
+  wear_tier TEXT NOT NULL,
+  base_value INTEGER NOT NULL DEFAULT 0,
+  tradable INTEGER NOT NULL DEFAULT 1,
+  locked INTEGER NOT NULL DEFAULT 0,
+  lock_reason TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_skin_instances_user ON skin_instances(user_id, tradable, locked);
+CREATE INDEX IF NOT EXISTS idx_skin_instances_skin ON skin_instances(skin_id);
+
+CREATE TABLE IF NOT EXISTS trade_offers (
+  id TEXT PRIMARY KEY,
+  from_user_id INTEGER NOT NULL,
+  to_user_id INTEGER NOT NULL,
+  offered_skin_instance_id TEXT NOT NULL,
+  requested_skin_instance_id TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  resolved_at TEXT,
+  FOREIGN KEY(from_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY(to_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY(offered_skin_instance_id) REFERENCES skin_instances(id) ON DELETE CASCADE,
+  FOREIGN KEY(requested_skin_instance_id) REFERENCES skin_instances(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_trade_offers_to_user ON trade_offers(to_user_id, status, updated_at);
+
+CREATE TABLE IF NOT EXISTS skin_duels (
+  id TEXT PRIMARY KEY,
+  challenger_user_id INTEGER NOT NULL,
+  opponent_user_id INTEGER NOT NULL,
+  challenger_skin_instance_id TEXT NOT NULL,
+  opponent_skin_instance_id TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  winner_user_id INTEGER,
+  challenger_roll REAL,
+  opponent_roll REAL,
+  created_at TEXT NOT NULL,
+  resolved_at TEXT,
+  FOREIGN KEY(challenger_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY(opponent_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY(winner_user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY(challenger_skin_instance_id) REFERENCES skin_instances(id) ON DELETE CASCADE,
+  FOREIGN KEY(opponent_skin_instance_id) REFERENCES skin_instances(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_skin_duels_user ON skin_duels(challenger_user_id, opponent_user_id, status);
+
 CREATE TABLE IF NOT EXISTS ab_assignments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER,
