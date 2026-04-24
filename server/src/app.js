@@ -86,8 +86,8 @@ function createApp() {
     if (!existingRotation) {
       const rotation = nextRotatingShop(Number(user.id));
       db.prepare(
-        "INSERT INTO shop_rotations (id, user_id, day_key, payload, created_at) VALUES (?, ?, ?, ?, ?)"
-      ).run(randomUUID(), user.id, dayKey, JSON.stringify(rotation), nowIso());
+        "INSERT INTO shop_rotations (user_id, day_key, payload, created_at) VALUES (?, ?, ?, ?)"
+      ).run(user.id, dayKey, JSON.stringify(rotation), nowIso());
     }
     logEvent({
       db,
@@ -315,11 +315,11 @@ function createApp() {
     const friend = getUserByPublicId(db, friendUserId);
     if (!user || !friend) return res.status(404).json({ error: "user not found" });
     db.prepare(
-      `INSERT INTO friendships (id, user_id, friend_user_id, status, created_at, updated_at)
-       VALUES (?, ?, ?, 'accepted', ?, ?)
+      `INSERT INTO friendships (user_id, friend_user_id, status, created_at, updated_at)
+       VALUES (?, ?, 'accepted', ?, ?)
        ON CONFLICT(user_id, friend_user_id)
        DO UPDATE SET status = 'accepted', updated_at = excluded.updated_at`
-    ).run(randomUUID(), user.id, friend.id, nowIso(), nowIso());
+    ).run(user.id, friend.id, nowIso(), nowIso());
     if (relationship === "rival") {
       db.prepare(
         `INSERT INTO rival_links (user_id, rival_user_id, rival_rank, created_at)
@@ -423,8 +423,8 @@ function createApp() {
     if (!row) {
       const rotation = nextRotatingShop(Number(user.id));
       db.prepare(
-        "INSERT INTO shop_rotations (id, user_id, day_key, payload, created_at) VALUES (?, ?, ?, ?, ?)"
-      ).run(randomUUID(), user.id, dayKey, JSON.stringify(rotation), nowIso());
+        "INSERT INTO shop_rotations (user_id, day_key, payload, created_at) VALUES (?, ?, ?, ?)"
+      ).run(user.id, dayKey, JSON.stringify(rotation), nowIso());
       row = { payload: JSON.stringify(rotation) };
     }
     const items = JSON.parse(row.payload);
@@ -437,8 +437,8 @@ function createApp() {
     const user = db.prepare("SELECT id FROM users WHERE tg_user_id = ?").get(String(userId));
     if (!user) return res.status(404).json({ error: "user not found" });
     db.prepare(
-      "INSERT INTO starter_funnel (id, user_id, accepted, created_at) VALUES (?, ?, ?, ?)"
-    ).run(randomUUID(), user.id, accepted ? 1 : 0, nowIso());
+      "INSERT INTO starter_funnel (user_id, accepted, created_at) VALUES (?, ?, ?)"
+    ).run(user.id, accepted ? 1 : 0, nowIso());
     res.json({ ok: true });
   });
 
@@ -448,9 +448,9 @@ function createApp() {
     const user = getUserByPublicId(db, userId);
     if (!user) return res.status(404).json({ error: "user not found" });
     db.prepare(
-      `INSERT INTO purchases (id, user_id, provider, provider_txn_id, sku, amount_cents, currency, status, payload, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(randomUUID(), user.id, provider, providerTxnId || null, sku, Number(amountCents || 0), currency, status, JSON.stringify(payload), nowIso());
+      `INSERT INTO purchases (user_id, provider, provider_txn_id, sku, amount_cents, currency, status, payload, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(user.id, provider, providerTxnId || null, sku, Number(amountCents || 0), currency, status, JSON.stringify(payload), nowIso());
     res.json({ ok: true });
   });
 
@@ -472,9 +472,9 @@ function createApp() {
     });
     const purchaseStatus = valid ? "verified" : "rejected";
     db.prepare(
-      `INSERT INTO purchases (id, user_id, provider, provider_txn_id, sku, amount_cents, currency, status, payload, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(randomUUID(), user.id, provider, providerTxnId, sku, Number(amountCents || 0), currency, purchaseStatus, JSON.stringify(payload), nowIso());
+      `INSERT INTO purchases (user_id, provider, provider_txn_id, sku, amount_cents, currency, status, payload, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(user.id, provider, providerTxnId, sku, Number(amountCents || 0), currency, purchaseStatus, JSON.stringify(payload), nowIso());
     if (valid) {
       const rewards = pricing.currencyPacks?.find((p) => p.id === sku) || (pricing.starterPack?.id === sku ? pricing.starterPack : null);
       if (rewards?.gems || rewards?.contents?.gems) {
@@ -514,10 +514,10 @@ function createApp() {
     const tournament = db.prepare("SELECT id FROM tournaments WHERE tournament_key = ?").get(String(tournamentId));
     if (!tournament) return res.status(404).json({ error: "tournament not found" });
     db.prepare(
-      `INSERT INTO tournament_entries (id, tournament_id, user_id, score, joined_at)
-       VALUES (?, ?, ?, 0, ?)
+      `INSERT INTO tournament_entries (tournament_id, user_id, score, joined_at)
+       VALUES (?, ?, 0, ?)
        ON CONFLICT(tournament_id, user_id) DO NOTHING`
-    ).run(randomUUID(), tournament.id, user.id, nowIso());
+    ).run(tournament.id, user.id, nowIso());
     logEvent({ db, userId: user.id, eventName: "tournament.join", properties: { tournamentId, paidEntry }, sessionId: randomUUID() });
     res.json({ ok: true });
   });
