@@ -64,7 +64,7 @@ jobs:
         env:
           BUTLER_API_KEY: ${{ secrets.ITCH_API_KEY }}
         run: |
-          # no-op marker to trigger retry deploy (attempt 5)
+          # no-op marker to trigger retry deploy (attempt 6)
           CHANNEL_INPUT="${{ github.event.inputs.channel }}"
           CHANNEL_VAR="${{ vars.ITCH_IO_CHANNEL }}"
           CHANNEL="${CHANNEL_INPUT:-${CHANNEL_VAR:-html5}}"
