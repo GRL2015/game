@@ -316,8 +316,8 @@ function loop(now) {
 function setTouchControl(event) {
   const rect = canvas.getBoundingClientRect();
   const x = event.clientX - rect.left;
-  const leftZone = canvas.width * 0.45;
-  const rightZone = canvas.width * 0.55;
+  const leftZone = rect.width * 0.45;
+  const rightZone = rect.width * 0.55;
   state.keys.left = x < leftZone;
   state.keys.right = x > rightZone;
 }
