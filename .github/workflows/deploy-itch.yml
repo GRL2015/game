@@ -1,5 +1,6 @@
 name: Deploy Neon Drift to itch.io
 
+# Retry-safe workflow for push-triggered deploys.
 on:
   push:
     branches:
