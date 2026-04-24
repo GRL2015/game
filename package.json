@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "keywords": [
     "ai",
@@ -25,5 +27,8 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "wrangler": "^4.85.0"
   }
 }
