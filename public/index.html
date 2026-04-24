@@ -1,0 +1,1486 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+  />
+  <title>Precision Art Studio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111f;
+      --panel: rgba(13, 21, 38, 0.84);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text: #f5f7fb;
+      --subtext: #9fb2c9;
+      --accent: #74a5ff;
+      --accent-strong: #4d86ff;
+      --muted: rgba(255, 255, 255, 0.08);
+      --success: #40d38a;
+      --danger: #ff6b7a;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.32);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top, rgba(116, 165, 255, 0.22), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(255, 110, 154, 0.16), transparent 28%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      padding: 28px;
+    }
+
+    .shell {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 430px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(22px);
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      padding: 24px;
+      position: sticky;
+      top: 24px;
+    }
+
+    .headline {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+
+    .headline h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .headline p {
+      margin: 10px 0 0;
+      color: var(--subtext);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .badge {
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      padding: 10px 12px;
+      background: rgba(116, 165, 255, 0.12);
+      color: #bcd0ff;
+      border-radius: 999px;
+      border: 1px solid rgba(116, 165, 255, 0.24);
+    }
+
+    .section {
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .section:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #d6e0ef;
+      margin-bottom: 12px;
+    }
+
+    .mode-grid,
+    .style-grid,
+    .quality-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .style-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .mode-card,
+    .token-card {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 14px;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .mode-card:hover,
+    .token-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(116, 165, 255, 0.36);
+    }
+
+    .mode-card.active,
+    .token-card.active {
+      border-color: rgba(116, 165, 255, 0.74);
+      background: rgba(116, 165, 255, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(116, 165, 255, 0.2);
+    }
+
+    .mode-card strong,
+    .token-card strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .mode-card span,
+    .token-card span {
+      display: block;
+      color: var(--subtext);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #e9f0fb;
+    }
+
+    textarea,
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(4, 8, 18, 0.56);
+      color: var(--text);
+      padding: 13px 14px;
+      font: inherit;
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    textarea {
+      min-height: 144px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    textarea:focus,
+    input:focus,
+    select:focus {
+      border-color: rgba(116, 165, 255, 0.6);
+      box-shadow: 0 0 0 3px rgba(116, 165, 255, 0.14);
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .muted {
+      color: var(--subtext);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .inline-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .inline-grid.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      color: #d8e5f7;
+    }
+
+    .checkbox-row input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    button {
+      border: none;
+      border-radius: 16px;
+      font: inherit;
+      font-weight: 800;
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: transform 0.1s ease, opacity 0.16s ease, background 0.16s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: wait;
+      transform: none;
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: white;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    .workspace {
+      display: grid;
+      gap: 20px;
+    }
+
+    .hero {
+      padding: 24px;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .status-copy h2 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: -0.03em;
+    }
+
+    .status-copy p {
+      margin: 8px 0 0;
+      color: var(--subtext);
+      max-width: 700px;
+      line-height: 1.55;
+    }
+
+    .status-pill {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #c9d7ea;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .status-pill.error {
+      color: #ffd0d8;
+      background: rgba(255, 107, 122, 0.12);
+      border-color: rgba(255, 107, 122, 0.28);
+    }
+
+    .status-pill.success {
+      color: #d5ffe9;
+      background: rgba(64, 211, 138, 0.12);
+      border-color: rgba(64, 211, 138, 0.24);
+    }
+
+    .canvas-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 580px;
+      border-radius: 24px;
+      overflow: hidden;
+      background:
+        linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.03) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.03) 75%),
+        rgba(255,255,255,0.02);
+      background-size: 28px 28px;
+      background-position: 0 0, 0 14px, 14px -14px, -14px 0;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: grid;
+      place-items: center;
+    }
+
+    .stage img {
+      max-width: 100%;
+      max-height: 78vh;
+      display: block;
+      object-fit: contain;
+      user-select: none;
+      pointer-events: none;
+      filter: var(--preview-filter);
+    }
+
+    .empty-state {
+      text-align: center;
+      max-width: 440px;
+      padding: 24px;
+    }
+
+    .empty-state strong {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    .empty-state p {
+      margin: 0;
+      color: var(--subtext);
+      line-height: 1.6;
+    }
+
+    .selection-overlay {
+      position: absolute;
+      inset: 0;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .selection-box {
+      position: absolute;
+      border: 2px solid rgba(116, 165, 255, 0.95);
+      background: rgba(116, 165, 255, 0.18);
+      box-shadow: 0 0 0 9999px rgba(3, 7, 18, 0.38);
+      display: none;
+      pointer-events: none;
+    }
+
+    .selection-hint {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      right: 16px;
+      background: rgba(5, 8, 16, 0.62);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: #dce9fc;
+      line-height: 1.5;
+      backdrop-filter: blur(14px);
+    }
+
+    .inspector {
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      padding: 18px;
+    }
+
+    .card h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .metric-label {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--subtext);
+      margin-bottom: 5px;
+    }
+
+    .metric-value {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .slider-group {
+      display: grid;
+      gap: 14px;
+    }
+
+    .slider-row {
+      display: grid;
+      gap: 8px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .gallery {
+      padding: 22px 24px 24px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .thumb {
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.16s ease;
+    }
+
+    .thumb:hover {
+      transform: translateY(-2px);
+      border-color: rgba(116, 165, 255, 0.34);
+    }
+
+    .thumb.active {
+      border-color: rgba(116, 165, 255, 0.72);
+      box-shadow: inset 0 0 0 1px rgba(116, 165, 255, 0.22);
+    }
+
+    .thumb img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb-copy {
+      padding: 10px 12px 12px;
+    }
+
+    .thumb-title {
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .thumb-meta {
+      font-size: 11px;
+      color: var(--subtext);
+    }
+
+    .utility-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .fineprint {
+      margin-top: 12px;
+      color: var(--subtext);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1180px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        position: static;
+      }
+
+      .canvas-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 740px) {
+      body {
+        padding: 16px;
+      }
+
+      .controls,
+      .hero,
+      .gallery {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .mode-grid,
+      .quality-grid,
+      .style-grid,
+      .inline-grid,
+      .inline-grid.four,
+      .metric-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stage {
+        min-height: 380px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="panel controls">
+      <div class="headline">
+        <div>
+          <h1>Precision Art Studio</h1>
+          <p>
+            Text-to-image, selective edits, seamless image extension, fast restyling,
+            and local warmth or saturation tuning in one workspace.
+          </p>
+        </div>
+        <div class="badge" id="apiBadge">Checking API</div>
+      </div>
+
+      <section class="section">
+        <div class="section-title">Mode</div>
+        <div class="mode-grid" id="modeGrid">
+          <button type="button" class="mode-card active" data-mode="generate">
+            <strong>Generate</strong>
+            <span>Create a new image from a detailed prompt.</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="edit">
+            <strong>Edit area</strong>
+            <span>Change only a selected region of the uploaded image.</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="expand">
+            <strong>Add to image</strong>
+            <span>Outpaint beyond the edges with seamless continuation.</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="restyle">
+            <strong>Change style</strong>
+            <span>Keep the scene but change the rendering look.</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="field">
+          <label for="promptInput">Prompt</label>
+          <textarea
+            id="promptInput"
+            placeholder="Example: A hyper-detailed cathedral floating above a stormy ocean at dawn, seen from a low cinematic angle, with no people and silver-blue lighting."
+          ></textarea>
+          <div class="muted">
+            The backend adds strict-following instructions so the model stays closer to your exact request.
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="styleNotes">Style notes</label>
+          <input
+            id="styleNotes"
+            type="text"
+            placeholder="Example: gritty film grain, desaturated palette, soft fog"
+          />
+        </div>
+
+        <div class="field">
+          <div class="section-title" style="margin-bottom:10px;">Style preset</div>
+          <div class="style-grid" id="styleGrid">
+            <button type="button" class="token-card active" data-style="none">
+              <strong>Neutral</strong>
+              <span>Just follow the prompt.</span>
+            </button>
+            <button type="button" class="token-card" data-style="photoreal">
+              <strong>Photo</strong>
+              <span>Real materials and lighting.</span>
+            </button>
+            <button type="button" class="token-card" data-style="anime">
+              <strong>Anime</strong>
+              <span>Cel-shaded illustration.</span>
+            </button>
+            <button type="button" class="token-card" data-style="watercolor">
+              <strong>Watercolor</strong>
+              <span>Pigment bloom and paper grain.</span>
+            </button>
+            <button type="button" class="token-card" data-style="editorial">
+              <strong>Editorial</strong>
+              <span>Magazine-style polish.</span>
+            </button>
+            <button type="button" class="token-card" data-style="render3d">
+              <strong>3D</strong>
+              <span>Cinematic render finish.</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="field">
+          <div class="section-title" style="margin-bottom:10px;">Quality</div>
+          <div class="quality-grid" id="qualityGrid">
+            <button type="button" class="token-card" data-quality="low">
+              <strong>Low</strong>
+              <span>Fast drafts.</span>
+            </button>
+            <button type="button" class="token-card active" data-quality="medium">
+              <strong>Medium</strong>
+              <span>Balanced detail.</span>
+            </button>
+            <button type="button" class="token-card" data-quality="high">
+              <strong>High</strong>
+              <span>Best polish.</span>
+            </button>
+            <button type="button" class="token-card" data-quality="auto">
+              <strong>Auto</strong>
+              <span>Let the backend choose.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="inline-grid">
+          <div class="field">
+            <label for="widthInput">Width</label>
+            <input id="widthInput" type="number" min="256" step="16" value="1536" />
+          </div>
+          <div class="field">
+            <label for="heightInput">Height</label>
+            <input id="heightInput" type="number" min="256" step="16" value="1024" />
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <input id="autoSizeInput" type="checkbox" />
+          <label for="autoSizeInput" style="margin:0; font-weight:600;">Use automatic dimensions when supported</label>
+        </div>
+        <div class="fineprint">
+          Custom dimensions must be multiples of 16. Generate supports flexible resolutions; image edit modes typically stay anchored to the uploaded image size.
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="field">
+          <label for="sourceUpload">Source image</label>
+          <input id="sourceUpload" type="file" accept="image/png,image/jpeg,image/webp" />
+          <div class="muted">
+            Required for edit, add-to-image, and style transfer modes.
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <input id="strictModeInput" type="checkbox" checked />
+          <label for="strictModeInput" style="margin:0; font-weight:600;">Prioritize literal prompt following</label>
+        </div>
+      </section>
+
+      <section class="section hidden" id="selectionSection">
+        <div class="section-title">Edit selection</div>
+        <div class="muted">
+          Drag a rectangle over the image preview to define the area to replace.
+        </div>
+        <div class="utility-row" style="margin-top:12px;">
+          <button type="button" class="secondary" id="clearSelectionBtn">Clear selection</button>
+        </div>
+      </section>
+
+      <section class="section hidden" id="expandSection">
+        <div class="section-title">Expansion</div>
+        <div class="inline-grid four">
+          <div class="field">
+            <label for="expandTop">Top</label>
+            <input id="expandTop" type="number" min="0" step="16" value="0" />
+          </div>
+          <div class="field">
+            <label for="expandRight">Right</label>
+            <input id="expandRight" type="number" min="0" step="16" value="512" />
+          </div>
+          <div class="field">
+            <label for="expandBottom">Bottom</label>
+            <input id="expandBottom" type="number" min="0" step="16" value="0" />
+          </div>
+          <div class="field">
+            <label for="expandLeft">Left</label>
+            <input id="expandLeft" type="number" min="0" step="16" value="512" />
+          </div>
+        </div>
+      </section>
+
+      <div class="button-row">
+        <button type="button" class="primary" id="runBtn">Generate image</button>
+        <button type="button" class="secondary" id="useResultBtn">Use result as source</button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <section class="panel hero">
+        <div class="status-row">
+          <div class="status-copy">
+            <h2>Preview and fine-tune</h2>
+            <p>
+              Results appear here immediately. Warmth and saturation controls can stay as live preview tweaks
+              or be baked into a new downloadable image when you click Apply tone changes.
+            </p>
+          </div>
+          <div class="status-pill" id="statusPill">Ready</div>
+        </div>
+
+        <div class="canvas-grid">
+          <div class="stage" id="stage">
+            <div class="empty-state" id="emptyState">
+              <strong>No image yet</strong>
+              <p>
+                Start with a prompt, or upload an image to edit, extend, or restyle it.
+              </p>
+            </div>
+            <img id="previewImage" alt="Generated artwork preview" class="hidden" />
+            <div class="selection-overlay hidden" id="selectionOverlay">
+              <div class="selection-box" id="selectionBox"></div>
+              <div class="selection-hint" id="selectionHint">
+                Drag to mark the part of the image you want to replace. Leave untouched areas outside the box.
+              </div>
+            </div>
+          </div>
+
+          <div class="inspector">
+            <section class="card">
+              <h3>Current result</h3>
+              <div class="metric-grid">
+                <div class="metric">
+                  <div class="metric-label">Mode</div>
+                  <div class="metric-value" id="modeMetric">Generate</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-label">Quality</div>
+                  <div class="metric-value" id="qualityMetric">Medium</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-label">Size</div>
+                  <div class="metric-value" id="sizeMetric">1536x1024</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-label">History</div>
+                  <div class="metric-value" id="historyMetric">0 renders</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <h3>Tone controls</h3>
+              <div class="slider-group">
+                <div class="slider-row">
+                  <div class="slider-label">
+                    <span>Saturation</span>
+                    <span id="saturationValue">100%</span>
+                  </div>
+                  <input id="saturationInput" type="range" min="0" max="200" value="100" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label">
+                    <span>Warmth</span>
+                    <span id="warmthValue">0</span>
+                  </div>
+                  <input id="warmthInput" type="range" min="-100" max="100" value="0" />
+                </div>
+              </div>
+              <div class="utility-row" style="margin-top:12px;">
+                <button type="button" class="secondary" id="resetToneBtn">Reset controls</button>
+                <button type="button" class="secondary" id="applyToneBtn">Apply tone changes</button>
+                <a id="downloadLink" class="secondary hidden" download="precision-art.png" style="text-decoration:none; display:inline-flex; align-items:center;">Download PNG</a>
+              </div>
+            </section>
+
+            <section class="card">
+              <h3>Resolved prompt</h3>
+              <div class="muted" id="resolvedPrompt">
+                The backend-composed prompt will appear here after the first render.
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel gallery">
+        <div class="status-row" style="margin-bottom:16px;">
+          <div class="status-copy">
+            <h2 style="font-size:20px;">Render history</h2>
+            <p>Click any previous result to bring it back into the main preview.</p>
+          </div>
+        </div>
+        <div class="gallery-grid" id="galleryGrid"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      mode: "generate",
+      stylePreset: "none",
+      quality: "medium",
+      strictMode: true,
+      sourceImageDataUrl: "",
+      currentImageDataUrl: "",
+      currentSize: "1536x1024",
+      history: [],
+      selection: null,
+      dragging: false,
+      dragStart: null,
+      imageBounds: null,
+      activeHistoryId: null,
+    };
+
+    const elements = {
+      apiBadge: document.getElementById("apiBadge"),
+      modeGrid: document.getElementById("modeGrid"),
+      styleGrid: document.getElementById("styleGrid"),
+      qualityGrid: document.getElementById("qualityGrid"),
+      promptInput: document.getElementById("promptInput"),
+      styleNotes: document.getElementById("styleNotes"),
+      widthInput: document.getElementById("widthInput"),
+      heightInput: document.getElementById("heightInput"),
+      autoSizeInput: document.getElementById("autoSizeInput"),
+      sourceUpload: document.getElementById("sourceUpload"),
+      strictModeInput: document.getElementById("strictModeInput"),
+      selectionSection: document.getElementById("selectionSection"),
+      expandSection: document.getElementById("expandSection"),
+      clearSelectionBtn: document.getElementById("clearSelectionBtn"),
+      expandTop: document.getElementById("expandTop"),
+      expandRight: document.getElementById("expandRight"),
+      expandBottom: document.getElementById("expandBottom"),
+      expandLeft: document.getElementById("expandLeft"),
+      runBtn: document.getElementById("runBtn"),
+      useResultBtn: document.getElementById("useResultBtn"),
+      statusPill: document.getElementById("statusPill"),
+      stage: document.getElementById("stage"),
+      emptyState: document.getElementById("emptyState"),
+      previewImage: document.getElementById("previewImage"),
+      selectionOverlay: document.getElementById("selectionOverlay"),
+      selectionBox: document.getElementById("selectionBox"),
+      selectionHint: document.getElementById("selectionHint"),
+      modeMetric: document.getElementById("modeMetric"),
+      qualityMetric: document.getElementById("qualityMetric"),
+      sizeMetric: document.getElementById("sizeMetric"),
+      historyMetric: document.getElementById("historyMetric"),
+      saturationInput: document.getElementById("saturationInput"),
+      warmthInput: document.getElementById("warmthInput"),
+      saturationValue: document.getElementById("saturationValue"),
+      warmthValue: document.getElementById("warmthValue"),
+      resetToneBtn: document.getElementById("resetToneBtn"),
+      applyToneBtn: document.getElementById("applyToneBtn"),
+      downloadLink: document.getElementById("downloadLink"),
+      resolvedPrompt: document.getElementById("resolvedPrompt"),
+      galleryGrid: document.getElementById("galleryGrid"),
+    };
+
+    boot();
+
+    async function boot() {
+      bindUi();
+      syncModeUi();
+      syncPreviewFilters();
+      updateMetrics();
+      await checkApiStatus();
+    }
+
+    function bindUi() {
+      elements.modeGrid.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-mode]");
+        if (!button) return;
+        state.mode = button.dataset.mode;
+        syncModeUi();
+      });
+
+      elements.styleGrid.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-style]");
+        if (!button) return;
+        state.stylePreset = button.dataset.style;
+        syncCardGroup(elements.styleGrid, "[data-style]", state.stylePreset, "style");
+      });
+
+      elements.qualityGrid.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-quality]");
+        if (!button) return;
+        state.quality = button.dataset.quality;
+        syncCardGroup(elements.qualityGrid, "[data-quality]", state.quality, "quality");
+        updateMetrics();
+      });
+
+      elements.strictModeInput.addEventListener("change", () => {
+        state.strictMode = elements.strictModeInput.checked;
+      });
+
+      elements.sourceUpload.addEventListener("change", async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        state.sourceImageDataUrl = await fileToDataUrl(file);
+        state.currentImageDataUrl = state.sourceImageDataUrl;
+        state.activeHistoryId = null;
+        setPreviewImage(state.sourceImageDataUrl);
+        elements.resolvedPrompt.textContent =
+          "Source image loaded. Switch to edit, add-to-image, or style transfer to transform it.";
+        setStatus("Source image loaded.", "success");
+        clearSelection();
+        updateMetrics();
+      });
+
+      elements.runBtn.addEventListener("click", runImageAction);
+
+      elements.useResultBtn.addEventListener("click", () => {
+        if (!state.currentImageDataUrl) {
+          setStatus("Generate or edit an image first.", "error");
+          return;
+        }
+        state.sourceImageDataUrl = state.currentImageDataUrl;
+        setStatus("Current result is now the source image.", "success");
+        clearSelection();
+      });
+
+      elements.clearSelectionBtn.addEventListener("click", clearSelection);
+
+      elements.saturationInput.addEventListener("input", syncPreviewFilters);
+      elements.warmthInput.addEventListener("input", syncPreviewFilters);
+      elements.resetToneBtn.addEventListener("click", () => {
+        elements.saturationInput.value = "100";
+        elements.warmthInput.value = "0";
+        syncPreviewFilters();
+      });
+      elements.applyToneBtn.addEventListener("click", applyToneAdjustments);
+
+      elements.selectionOverlay.addEventListener("pointerdown", startSelection);
+      elements.selectionOverlay.addEventListener("pointermove", updateSelectionDrag);
+      elements.selectionOverlay.addEventListener("pointerup", finishSelection);
+      elements.selectionOverlay.addEventListener("pointerleave", finishSelection);
+      elements.selectionOverlay.addEventListener("pointercancel", finishSelection);
+
+      elements.galleryGrid.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-history-id]");
+        if (!button) return;
+        const item = state.history.find((entry) => entry.id === button.dataset.historyId);
+        if (!item) return;
+        state.activeHistoryId = item.id;
+        state.currentImageDataUrl = item.imageDataUrl;
+        state.currentSize = item.size;
+        elements.resolvedPrompt.textContent = item.resolvedPrompt || "No prompt recorded.";
+        setPreviewImage(item.imageDataUrl);
+        renderGallery();
+        updateMetrics();
+      });
+    }
+
+    async function checkApiStatus() {
+      try {
+        const response = await fetch("/api/status");
+        const payload = await response.json();
+        if (!payload.ok) {
+          throw new Error("Status check failed.");
+        }
+        elements.apiBadge.textContent = payload.hasApiKey
+          ? `API ready - ${payload.defaultModel}`
+          : "API key missing";
+        if (!payload.hasApiKey) {
+          elements.apiBadge.style.background = "rgba(255, 107, 122, 0.14)";
+          elements.apiBadge.style.borderColor = "rgba(255, 107, 122, 0.28)";
+          elements.apiBadge.style.color = "#ffd4db";
+        }
+      } catch (error) {
+        elements.apiBadge.textContent = "Status unavailable";
+      }
+    }
+
+    function syncModeUi() {
+      syncCardGroup(elements.modeGrid, "[data-mode]", state.mode, "mode");
+      const needsSource = state.mode !== "generate";
+      const allowsSelection = state.mode === "edit";
+      const showsExpansion = state.mode === "expand";
+
+      elements.selectionSection.classList.toggle("hidden", !allowsSelection);
+      elements.expandSection.classList.toggle("hidden", !showsExpansion);
+      elements.selectionOverlay.classList.toggle("hidden", !allowsSelection || !getEffectiveSourceImage());
+      elements.selectionHint.classList.toggle("hidden", !allowsSelection || !getEffectiveSourceImage());
+
+      if (needsSource) {
+        elements.sourceUpload.setAttribute("required", "required");
+      } else {
+        elements.sourceUpload.removeAttribute("required");
+      }
+
+      elements.runBtn.textContent =
+        state.mode === "generate"
+          ? "Generate image"
+          : state.mode === "edit"
+            ? "Apply edit"
+            : state.mode === "expand"
+              ? "Extend image"
+              : "Restyle image";
+
+      clearSelection();
+      updateMetrics();
+    }
+
+    function syncCardGroup(container, selector, activeValue, dataKey) {
+      for (const button of container.querySelectorAll(selector)) {
+        button.classList.toggle("active", button.dataset[dataKey] === activeValue);
+      }
+    }
+
+    function updateMetrics() {
+      elements.modeMetric.textContent = toTitleCase(state.mode === "expand" ? "add to image" : state.mode);
+      elements.qualityMetric.textContent = toTitleCase(state.quality);
+      elements.sizeMetric.textContent = state.currentSize || resolveRequestedSizeLabel();
+      elements.historyMetric.textContent = `${state.history.length} render${state.history.length === 1 ? "" : "s"}`;
+    }
+
+    function setStatus(message, variant = "") {
+      elements.statusPill.textContent = message;
+      elements.statusPill.className = "status-pill";
+      if (variant) {
+        elements.statusPill.classList.add(variant);
+      }
+    }
+
+    function resolveRequestedSizeLabel() {
+      if (elements.autoSizeInput.checked && state.mode === "generate") {
+        return "auto";
+      }
+      return `${elements.widthInput.value || 0}x${elements.heightInput.value || 0}`;
+    }
+
+    async function runImageAction() {
+      const prompt = elements.promptInput.value.trim();
+      if (prompt.length < 3) {
+        setStatus("Write a more detailed prompt first.", "error");
+        return;
+      }
+
+      if (state.mode !== "generate" && !getEffectiveSourceImage()) {
+        setStatus("Upload or choose a source image for this mode.", "error");
+        return;
+      }
+
+      if (state.mode === "edit" && !state.selection) {
+        setStatus("Drag a selection box over the image for targeted edits.", "error");
+        return;
+      }
+
+      if (state.mode === "expand") {
+        const expansionValues = getExpansionValues();
+        if (Object.values(expansionValues).every((value) => value === 0)) {
+          setStatus("Increase at least one edge to extend the image.", "error");
+          return;
+        }
+      }
+
+      elements.runBtn.disabled = true;
+      setStatus("Rendering image...", "");
+
+      try {
+        const request = buildRequestPayload();
+        const endpoint = state.mode === "generate" ? "/api/generate" : "/api/edit";
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(request),
+        });
+
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.error || "Image request failed.");
+        }
+
+        state.currentImageDataUrl = payload.imageDataUrl;
+        state.currentSize = payload.size || resolveRequestedSizeLabel();
+        state.activeHistoryId = crypto.randomUUID();
+        addHistoryEntry({
+          id: state.activeHistoryId,
+          imageDataUrl: payload.imageDataUrl,
+          mode: state.mode,
+          quality: state.quality,
+          size: payload.size || resolveRequestedSizeLabel(),
+          resolvedPrompt: payload.resolvedPrompt,
+          createdAt: new Date().toISOString(),
+        });
+
+        elements.resolvedPrompt.textContent = payload.resolvedPrompt || "No resolved prompt available.";
+        setPreviewImage(payload.imageDataUrl);
+        setStatus("Image ready.", "success");
+
+        if (state.mode !== "generate") {
+          state.sourceImageDataUrl = payload.imageDataUrl;
+        }
+
+        clearSelection();
+        renderGallery();
+        updateMetrics();
+      } catch (error) {
+        setStatus(error.message || "Image request failed.", "error");
+      } finally {
+        elements.runBtn.disabled = false;
+      }
+    }
+
+    function buildRequestPayload() {
+      const base = {
+        prompt: elements.promptInput.value.trim(),
+        stylePreset: state.stylePreset,
+        styleNotes: elements.styleNotes.value.trim(),
+        quality: state.quality,
+        strictMode: elements.strictModeInput.checked,
+      };
+
+      if (state.mode === "generate") {
+        return {
+          ...base,
+          size: elements.autoSizeInput.checked ? "auto" : undefined,
+          width: elements.autoSizeInput.checked ? undefined : Number(elements.widthInput.value),
+          height: elements.autoSizeInput.checked ? undefined : Number(elements.heightInput.value),
+        };
+      }
+
+      return {
+        ...base,
+        mode: state.mode,
+        imageDataUrl: getEffectiveSourceImage(),
+        size: undefined,
+        selection: state.mode === "edit" ? state.selection : undefined,
+        expansion: state.mode === "expand" ? getExpansionValues() : undefined,
+      };
+    }
+
+    function getExpansionValues() {
+      return {
+        top: Number(elements.expandTop.value || 0),
+        right: Number(elements.expandRight.value || 0),
+        bottom: Number(elements.expandBottom.value || 0),
+        left: Number(elements.expandLeft.value || 0),
+      };
+    }
+
+    function setPreviewImage(dataUrl) {
+      if (!dataUrl) return;
+      elements.previewImage.src = dataUrl;
+      elements.previewImage.classList.remove("hidden");
+      elements.emptyState.classList.add("hidden");
+      elements.downloadLink.href = dataUrl;
+      elements.downloadLink.classList.remove("hidden");
+      elements.selectionOverlay.classList.toggle("hidden", state.mode !== "edit" || !getEffectiveSourceImage());
+      syncSelectionOverlay();
+    }
+
+    function addHistoryEntry(entry) {
+      state.history = [entry, ...state.history].slice(0, 12);
+    }
+
+    function renderGallery() {
+      if (state.history.length === 0) {
+        elements.galleryGrid.innerHTML = `
+          <div class="muted">No renders yet. Your recent images will appear here.</div>
+        `;
+        return;
+      }
+
+      elements.galleryGrid.innerHTML = state.history
+        .map((item) => {
+          const isActive = item.id === state.activeHistoryId ? "active" : "";
+          return `
+            <button type="button" class="thumb ${isActive}" data-history-id="${item.id}">
+              <img src="${item.imageDataUrl}" alt="History preview for ${escapeHtml(item.mode)}" />
+              <div class="thumb-copy">
+                <div class="thumb-title">${escapeHtml(toTitleCase(item.mode === "expand" ? "add to image" : item.mode))}</div>
+                <div class="thumb-meta">${escapeHtml(item.size)} - ${escapeHtml(toTitleCase(item.quality))}</div>
+              </div>
+            </button>
+          `;
+        })
+        .join("");
+    }
+
+    function syncPreviewFilters() {
+      const saturation = Number(elements.saturationInput.value);
+      const warmth = Number(elements.warmthInput.value);
+      elements.saturationValue.textContent = `${saturation}%`;
+      elements.warmthValue.textContent = warmth > 0 ? `+${warmth}` : String(warmth);
+
+      const sepia = Math.max(0, warmth) * 0.4 / 100;
+      const hueRotate = warmth < 0 ? `${Math.abs(warmth) * 0.15}deg` : "0deg";
+      const brightness = 1 + Math.max(0, warmth) / 500;
+
+      const filter = [
+        `saturate(${saturation}%)`,
+        `sepia(${sepia})`,
+        `hue-rotate(${hueRotate})`,
+        `brightness(${brightness})`,
+      ].join(" ");
+
+      document.documentElement.style.setProperty("--preview-filter", filter);
+    }
+
+    async function applyToneAdjustments() {
+      if (!state.currentImageDataUrl) {
+        setStatus("Generate or select an image first.", "error");
+        return;
+      }
+
+      elements.applyToneBtn.disabled = true;
+      setStatus("Applying tone changes...", "");
+
+      try {
+        const response = await fetch("/api/tone", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            imageDataUrl: state.currentImageDataUrl,
+            saturation: Number(elements.saturationInput.value),
+            warmth: Number(elements.warmthInput.value),
+          }),
+        });
+
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.error || "Tone adjustment failed.");
+        }
+
+        state.currentImageDataUrl = payload.imageDataUrl;
+        state.currentSize = payload.size || state.currentSize;
+        state.activeHistoryId = crypto.randomUUID();
+        addHistoryEntry({
+          id: state.activeHistoryId,
+          imageDataUrl: payload.imageDataUrl,
+          mode: "tone",
+          quality: "local",
+          size: payload.size || state.currentSize,
+          resolvedPrompt: `Tone adjustment applied: saturation ${elements.saturationInput.value}% and warmth ${elements.warmthInput.value}.`,
+          createdAt: new Date().toISOString(),
+        });
+
+        elements.resolvedPrompt.textContent = "Local tone adjustment applied and exported as a new PNG.";
+        setPreviewImage(payload.imageDataUrl);
+        renderGallery();
+        updateMetrics();
+        setStatus("Tone changes applied.", "success");
+      } catch (error) {
+        setStatus(error.message || "Tone adjustment failed.", "error");
+      } finally {
+        elements.applyToneBtn.disabled = false;
+      }
+    }
+
+    function clearSelection() {
+      state.selection = null;
+      state.dragging = false;
+      state.dragStart = null;
+      elements.selectionBox.style.display = "none";
+    }
+
+    function startSelection(event) {
+      if (state.mode !== "edit" || !state.currentImageDataUrl) return;
+      const rect = state.imageBounds || getVisibleImageBounds();
+      if (!rect) return;
+      state.dragging = true;
+      state.dragStart = {
+        x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
+        y: clamp((event.clientY - rect.top) / rect.height, 0, 1),
+      };
+      updateSelectionVisual(state.dragStart, state.dragStart);
+      elements.selectionOverlay.setPointerCapture?.(event.pointerId);
+    }
+
+    function updateSelectionDrag(event) {
+      if (!state.dragging || !state.dragStart) return;
+      const rect = state.imageBounds || getVisibleImageBounds();
+      if (!rect) return;
+      const current = {
+        x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
+        y: clamp((event.clientY - rect.top) / rect.height, 0, 1),
+      };
+      updateSelectionVisual(state.dragStart, current);
+    }
+
+    function finishSelection(event) {
+      if (!state.dragging || !state.dragStart) return;
+      const rect = state.imageBounds || getVisibleImageBounds();
+      if (!rect) {
+        clearSelection();
+        return;
+      }
+      const end = {
+        x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
+        y: clamp((event.clientY - rect.top) / rect.height, 0, 1),
+      };
+      state.dragging = false;
+
+      const left = Math.min(state.dragStart.x, end.x);
+      const top = Math.min(state.dragStart.y, end.y);
+      const width = Math.abs(state.dragStart.x - end.x);
+      const height = Math.abs(state.dragStart.y - end.y);
+
+      if (width < 0.01 || height < 0.01) {
+        clearSelection();
+        setStatus("Selection was too small. Drag a larger area.", "error");
+        return;
+      }
+
+      state.selection = { x: left, y: top, width, height };
+      updateSelectionVisual(
+        { x: left, y: top },
+        { x: left + width, y: top + height },
+      );
+      setStatus("Selection updated.", "success");
+    }
+
+    function updateSelectionVisual(start, end) {
+      const left = Math.min(start.x, end.x) * 100;
+      const top = Math.min(start.y, end.y) * 100;
+      const width = Math.abs(start.x - end.x) * 100;
+      const height = Math.abs(start.y - end.y) * 100;
+
+      elements.selectionBox.style.display = "block";
+      elements.selectionBox.style.left = `${left}%`;
+      elements.selectionBox.style.top = `${top}%`;
+      elements.selectionBox.style.width = `${width}%`;
+      elements.selectionBox.style.height = `${height}%`;
+    }
+
+    function syncSelectionOverlay() {
+      const bounds = getVisibleImageBounds();
+      state.imageBounds = bounds;
+
+      if (!bounds) {
+        elements.selectionOverlay.style.inset = "0";
+        return;
+      }
+
+      const stageRect = elements.stage.getBoundingClientRect();
+      elements.selectionOverlay.style.left = `${bounds.left - stageRect.left}px`;
+      elements.selectionOverlay.style.top = `${bounds.top - stageRect.top}px`;
+      elements.selectionOverlay.style.width = `${bounds.width}px`;
+      elements.selectionOverlay.style.height = `${bounds.height}px`;
+      elements.selectionOverlay.style.right = "auto";
+      elements.selectionOverlay.style.bottom = "auto";
+    }
+
+    function getVisibleImageBounds() {
+      if (elements.previewImage.classList.contains("hidden") || !elements.previewImage.complete) {
+        return null;
+      }
+
+      const imageRect = elements.previewImage.getBoundingClientRect();
+      if (!imageRect.width || !imageRect.height) {
+        return null;
+      }
+
+      return imageRect;
+    }
+
+    function getEffectiveSourceImage() {
+      return state.currentImageDataUrl || state.sourceImageDataUrl;
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Failed to read the selected file."));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function toTitleCase(value) {
+      return String(value)
+        .replace(/[-_]/g, " ")
+        .replace(/\b\w/g, (character) => character.toUpperCase());
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    window.addEventListener("resize", syncSelectionOverlay);
+    elements.previewImage.addEventListener("load", syncSelectionOverlay);
+  </script>
+</body>
+</html>
