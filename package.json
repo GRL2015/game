@@ -1,0 +1,29 @@
+{
+  "name": "precision-art-studio",
+  "version": "1.0.0",
+  "description": "Prompt-faithful AI art generator with editing, outpainting, restyling, and tone controls.",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "ai",
+    "art",
+    "image-generation",
+    "inpainting",
+    "outpainting"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "sharp": "^0.34.5"
+  }
+}
