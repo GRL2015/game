@@ -70,16 +70,56 @@
           <button id="upgradeArmorBtn" class="shop-btn" type="button" data-upgrade="armor">Armor + Safety</button>
           <button id="upgradeMagnetBtn" class="shop-btn" type="button" data-upgrade="magnet">Magnet + Orbit</button>
         </div>
+        <h3 class="panel-subtitle">Direct Skin Buys (Credits)</h3>
+        <div class="rarity-buy-grid">
+          <button class="shop-btn rarity-common" type="button" data-buy-rarity="common">Buy Common</button>
+          <button class="shop-btn rarity-rare" type="button" data-buy-rarity="rare">Buy Rare</button>
+          <button class="shop-btn rarity-epic" type="button" data-buy-rarity="epic">Buy Epic</button>
+          <button class="shop-btn rarity-legendary" type="button" data-buy-rarity="legendary">Buy Legendary</button>
+          <button class="shop-btn rarity-mythic" type="button" data-buy-rarity="mythic">Buy Mythic</button>
+          <button class="shop-btn rarity-godly" type="button" data-buy-rarity="godly">Buy Godly</button>
+        </div>
+        <p class="panel-note">Skins are earnable from gameplay crates or bought directly with in-game credits.</p>
+      </article>
+
+      <article class="panel">
+        <h2>Loot Box Economy</h2>
+        <div class="crate-stats">
+          <span>Street Crates: <b id="streetCratesValue">0</b></span>
+          <span>Premium Crates: <b id="premiumCratesValue">0</b></span>
+          <span>Vault Value: <b id="vaultValue">0</b></span>
+        </div>
+        <div class="shop-grid">
+          <button id="openStreetCrateBtn" class="shop-btn" type="button">Open Street Crate</button>
+          <button id="openPremiumCrateBtn" class="shop-btn" type="button">Open Premium Crate</button>
+          <button id="buyStreetCrateBtn" class="shop-btn" type="button">Buy Street Crate</button>
+          <button id="buyPremiumCrateBtn" class="shop-btn" type="button">Buy Premium Crate</button>
+        </div>
+        <div class="rarity-legend">
+          <span class="rarity-chip rarity-common">Common</span>
+          <span class="rarity-chip rarity-rare">Rare</span>
+          <span class="rarity-chip rarity-epic">Epic</span>
+          <span class="rarity-chip rarity-legendary">Legendary</span>
+          <span class="rarity-chip rarity-mythic">Mythic</span>
+          <span class="rarity-chip rarity-godly">Godly</span>
+        </div>
+        <div class="drop-result" id="dropResult">Open a crate to reveal a cosmetic drop.</div>
         <p class="panel-note">
-          Earn credits in gameplay. Paid packs are optional and never required to keep progressing.
+          Duplicate drops are automatically salvaged into credits based on rarity. Godly drops are extremely rare.
         </p>
+      </article>
+
+      <article class="panel">
+        <h2>Skin Vault</h2>
+        <ul id="collectionList" class="collection-list"></ul>
+        <p class="panel-note">Equip any owned skin. Rarer drops carry higher salvage and collection value.</p>
       </article>
 
       <article class="panel">
         <h2>Premium Store (Optional Gems)</h2>
         <div class="premium-grid">
           <button id="buyReviveBtn" class="gem-btn" type="button" data-gem-item="revive">Revive Token (60 gems)</button>
-          <button id="buySkinBtn" class="gem-btn" type="button" data-gem-item="skin">Unlock Skin (140 gems)</button>
+          <button id="buySkinBtn" class="gem-btn" type="button" data-gem-item="skin">Unlock Neon Skin (140 gems)</button>
           <button id="buyBoosterBtn" class="gem-btn" type="button" data-gem-item="boost">XP Booster (90 gems)</button>
         </div>
 
@@ -106,7 +146,7 @@
 
     <footer>
       <p>
-        Upload-ready static browser game for itch.io/Newgrounds with ethical monetization and PayPal integration.
+        Upload-ready static browser game with cosmetic rarity economy and optional PayPal support.
       </p>
     </footer>
   </main>
