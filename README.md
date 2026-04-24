@@ -85,6 +85,49 @@ Run tests:
 npm test
 ```
 
+## Deploy
+
+### Render
+
+This repo now includes a `render.yaml` Blueprint and a production `Dockerfile`.
+
+Steps:
+
+1. Push the repo to GitHub.
+2. In Render, create a new Blueprint using this repository.
+3. When prompted, set:
+   - `OPENAI_API_KEY`
+4. Deploy.
+
+Render will:
+
+- build from `Dockerfile`
+- start the app with `npm start`
+- use `GET /health` for health checks
+
+### Docker
+
+Build:
+
+```bash
+docker build -t precision-art-studio .
+```
+
+Run:
+
+```bash
+docker run --rm -p 3000:3000 \
+  -e PORT=3000 \
+  -e OPENAI_API_KEY=your_key_here \
+  precision-art-studio
+```
+
+Then open:
+
+```text
+http://localhost:3000
+```
+
 ## Usage notes
 
 ### Generate
@@ -150,3 +193,4 @@ Generated images can use flexible dimensions. Edit and restyle flows stay anchor
 
 - The app works without an API key for local tone adjustment and interface testing, but generation and model-backed editing require `OPENAI_API_KEY`.
 - The browser UI is intentionally framework-free to keep the project easy to inspect and deploy.
+- A lightweight `GET /health` endpoint is included for production health checks.

@@ -158,6 +158,24 @@ test("status route responds without an API key", async () => {
   }
 });
 
+test("health route returns 200", async () => {
+  const server = startServer(0);
+
+  try {
+    await once(server, "listening");
+    const address = server.address();
+    assert.ok(address && typeof address === "object");
+
+    const response = await fetch(`http://127.0.0.1:${address.port}/health`);
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(payload, { ok: true });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 function once(emitter, eventName) {
   return new Promise((resolve, reject) => {
     emitter.once(eventName, resolve);

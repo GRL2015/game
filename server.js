@@ -31,6 +31,12 @@ app.get("/api/status", (_request, response) => {
   });
 });
 
+app.get("/health", (_request, response) => {
+  response.status(200).json({
+    ok: true,
+  });
+});
+
 app.post("/api/generate", async (request, response) => {
   try {
     ensureApiKey();
@@ -179,9 +185,13 @@ app.use((request, response, next) => {
 });
 
 function startServer(port = PORT) {
-  return app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Precision Art Studio listening on http://localhost:${port}`);
   });
+
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
+  return server;
 }
 
 if (require.main === module) {
