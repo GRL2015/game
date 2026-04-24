@@ -32,6 +32,15 @@
       <div class="status-pill" id="statusPill">Ready to queue.</div>
     </section>
 
+    <section class="meta-row">
+      <div class="wallet">
+        <span>Pass Tier: <b id="passTierValue">1</b></span>
+        <span>Pass XP: <b id="passXpValue">0</b></span>
+        <span>Comeback: <b id="comebackValue">None</b></span>
+      </div>
+      <div class="status-pill" id="shopVariantPill">Shop Variant: -</div>
+    </section>
+
     <section class="xp-track">
       <div class="xp-bar">
         <div id="xpFill" class="xp-fill"></div>
@@ -64,7 +73,11 @@
     <section class="dashboard">
       <article class="panel">
         <h2>Daily Missions</h2>
+        <p id="eventTicker" class="panel-note">No active event.</p>
         <ul id="missionList" class="mission-list"></ul>
+        <h3 class="panel-subtitle">Comeback Rewards</h3>
+        <div id="comebackPanel" class="drop-result">No comeback reward available.</div>
+        <button id="claimComebackBtn" class="shop-btn" type="button">Claim Comeback Reward</button>
       </article>
 
       <article class="panel">
@@ -77,7 +90,7 @@
           <button id="buyPremiumCrateBtn" class="shop-btn" type="button">Buy Premium Crate</button>
           <button id="buyStarterPackBtn" class="shop-btn" type="button">Starter Pack Bonus</button>
         </div>
-        <div id="rotatingShop" class="rotating-shop"></div>
+        <div id="rotatingShop" class="shop-grid"></div>
       </article>
 
       <article class="panel">
@@ -113,12 +126,23 @@
       <article class="panel">
         <h2>Social & Leaderboard</h2>
         <div id="leaderboardList" class="leaderboard-list"></div>
+        <h3 class="panel-subtitle">Friends & Rivals</h3>
+        <div id="friendsList" class="leaderboard-list"></div>
+        <div class="shop-grid">
+          <input id="friendInput" class="shop-input" type="text" placeholder="friend user id" />
+          <button id="addFriendBtn" class="shop-btn" type="button">Add Friend</button>
+          <button id="addRivalBtn" class="shop-btn" type="button">Mark Rival</button>
+        </div>
+        <ul id="rivalryList" class="mission-list"></ul>
         <div class="shop-grid">
           <button id="shareScoreBtn" class="shop-btn" type="button">Share Score</button>
           <button id="challengeFriendBtn" class="shop-btn" type="button">Challenge Friend</button>
           <button id="inviteRewardBtn" class="shop-btn" type="button">Invite Reward</button>
           <button id="joinTournamentBtn" class="shop-btn" type="button">Join Weekly Tournament</button>
+          <button id="shareCardBtn" class="shop-btn" type="button">Generate Share Card</button>
         </div>
+        <div id="challengeLinkBox" class="drop-result">Challenge link will appear here.</div>
+        <canvas id="socialCardCanvas" width="640" height="320" style="display: none"></canvas>
       </article>
 
       <article class="panel">
@@ -128,6 +152,7 @@
           <button id="buyReviveBtn" class="gem-btn" type="button">Revive Token (60 gems)</button>
           <button id="buyBoosterBtn" class="gem-btn" type="button">XP Booster (90 gems)</button>
           <button id="buySkinBtn" class="gem-btn" type="button">Premium Skin (140 gems)</button>
+          <button id="bundleOfferBtn" class="gem-btn" type="button">Flash Bundle (120 gems)</button>
         </div>
         <div class="pack-list">
           <div class="pack-card"><div><b>100 Gems</b><span>$2.99</span></div><div id="paypal-pack-starter" class="paypal-slot"></div></div>
@@ -143,6 +168,7 @@
     </footer>
   </main>
 
+  <div id="rewardPop" class="reward-pop">+Reward</div>
   <script src="./game.js"></script>
 </body>
 </html>

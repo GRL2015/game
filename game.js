@@ -99,7 +99,24 @@ const ui = {
   profileCard: document.getElementById("profileCard"),
   collectionList: document.getElementById("collectionList"),
   leaderboardList: document.getElementById("leaderboardList"),
+  friendsList: document.getElementById("friendsList"),
+  friendInput: document.getElementById("friendInput"),
+  addFriendBtn: document.getElementById("addFriendBtn"),
+  addRivalBtn: document.getElementById("addRivalBtn"),
+  shareCardBtn: document.getElementById("shareCardBtn"),
+  challengeLinkBox: document.getElementById("challengeLinkBox"),
+  claimComebackBtn: document.getElementById("claimComebackBtn"),
+  comebackPanel: document.getElementById("comebackPanel"),
+  passTierValue: document.getElementById("passTierValue"),
+  passXpValue: document.getElementById("passXpValue"),
+  comebackValue: document.getElementById("comebackValue"),
+  shopVariantPill: document.getElementById("shopVariantPill"),
   paypalStatus: document.getElementById("paypalStatus"),
+  eventTicker: document.getElementById("eventTicker"),
+  comebackRewardBtn: document.getElementById("comebackRewardBtn"),
+  bundleOfferBtn: document.getElementById("bundleOfferBtn"),
+  socialCardCanvas: document.getElementById("socialCardCanvas"),
+  rivalryList: document.getElementById("rivalryList"),
 };
 
 const ctx = ui.canvas.getContext("2d");
@@ -127,6 +144,10 @@ const state = {
   dailyClaimAt: "",
   lastInviteClaimAt: "",
   adCooldownMatches: 0,
+  eventPassLevel: 1,
+  eventPassXp: 0,
+  comebackEligible: false,
+  comebackClaimedAt: "",
   missionLedger: {},
   missionsForToday: [],
   inventory: {
@@ -144,6 +165,10 @@ const state = {
   },
   lastDrop: "",
   firstPurchaseDone: false,
+  starterOfferShown: false,
+  rivals: [],
+  friends: [],
+  ab: { shopPricing: "A", rewardCurve: "A", missionDifficulty: "A", adFrequency: "A", uiLayout: "A" },
   matchBoosts: {
     xpMultiplier: 1,
   },
@@ -216,6 +241,8 @@ function loadState() {
 
 function setStatus(text) {
   ui.status.textContent = text;
+  ui.status.classList.add("flash");
+  setTimeout(() => ui.status.classList.remove("flash"), 240);
 }
 
 function showOverlay(title, text) {
@@ -280,6 +307,14 @@ function updateHud() {
   ui.streetCrates.textContent = String(state.inventory.streetCrates);
   ui.premiumCrates.textContent = String(state.inventory.premiumCrates);
   ui.vaultValue.textContent = String(vaultValue());
+  if (ui.passTierValue) ui.passTierValue.textContent = String(state.eventPassLevel);
+  if (ui.passXpValue) ui.passXpValue.textContent = String(state.eventPassXp);
+  if (ui.comebackValue) ui.comebackValue.textContent = state.comebackEligible ? "Ready" : "None";
+  if (ui.shopVariantPill) ui.shopVariantPill.textContent = `Shop Variant: ${state.ab.shopPricing}`;
+  if (ui.eventTicker) {
+    const active = EVENTS.filter((e) => e.active).map((e) => e.name).join(" • ");
+    ui.eventTicker.textContent = active || "No active event";
+  }
 }
 
 function renderProfileCard() {
@@ -290,6 +325,7 @@ function renderProfileCard() {
     <div><b>Premium:</b> ${state.premium ? "Active" : "Free"}</div>
     <div><b>Event Pass:</b> ${state.eventPassPremium ? "Premium Track" : "Free Track"}</div>
     <div><b>Last Drop:</b> ${state.lastDrop || "None"}</div>
+    <div><b>A/B:</b> shop ${state.ab.shopPricing} / rewards ${state.ab.rewardCurve}</div>
   `;
 }
 
@@ -393,9 +429,40 @@ function renderMissions() {
       updateHud();
       renderMissions();
       setStatus(`Claimed mission: ${mission.text}`);
+      rewardPop(`+${mission.rewardCredits} credits • +${mission.rewardXp} XP`);
     });
     li.append(title, progressEl, reward, claim);
     ui.missionList.appendChild(li);
+  }
+}
+
+function rewardPop(text) {
+  const el = document.getElementById("rewardPop") || document.createElement("div");
+  if (!el.id) {
+    el.id = "rewardPop";
+    el.className = "reward-pop";
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  el.classList.add("show");
+  setTimeout(() => {
+    el.classList.remove("show");
+  }, 1200);
+}
+
+function parseChallengeQuery() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const challenge = params.get("challenge");
+    const score = Number(params.get("score") || 0);
+    if (challenge && ui.challengeLinkBox) {
+      ui.challengeLinkBox.textContent = `Challenge ${challenge} loaded. Beat score: ${score || "?"}.`;
+      if (score > 0) {
+        showOverlay("Challenge Loaded", `Target score: ${score}. Beat it for bragging rights.`);
+      }
+    }
+  } catch {
+    // ignore URL parse issues
   }
 }
 
@@ -492,9 +559,14 @@ function endMatch(win) {
   updateMissionStats(win);
   if (win && (state.score >= 700 || state.level >= 5)) {
     state.inventory.streetCrates += 1;
+    rewardPop("+1 Street Crate");
   }
   if (win && state.premium && Math.random() < 0.2) {
     state.inventory.premiumCrates += 1;
+    rewardPop("+1 Premium Crate");
+  }
+  if (!win && state.matchCount >= 3 && state.wins / Math.max(1, state.matchCount) < 0.25) {
+    state.comebackEligible = true;
   }
   maybeShowInterstitial();
   saveState();
@@ -731,10 +803,14 @@ function openCrate(type) {
   if (owned > 0) {
     state.credits += rarityMeta(rarity).salvage;
     ui.dropResult.textContent = `${rarityMeta(rarity).label} duplicate: ${skin.name} • +${rarityMeta(rarity).salvage} credits`;
+    rewardPop(`Duplicate salvage +${rarityMeta(rarity).salvage}`);
   } else {
     ui.dropResult.textContent = `${rarityMeta(rarity).label} unlocked: ${skin.name}`;
+    rewardPop(`Unlocked ${skin.name}`);
   }
   state.lastDrop = `${skin.name} (${rarityMeta(rarity).label})`;
+  ui.dropResult.classList.add("reveal");
+  setTimeout(() => ui.dropResult.classList.remove("reveal"), 520);
   saveState();
   updateHud();
   renderCollection();
@@ -807,6 +883,7 @@ function buyStarterPack() {
   state.inventory.streetCrates += 3;
   state.inventory.premiumCrates += 1;
   state.firstPurchaseDone = true;
+  state.starterOfferShown = true;
   saveState();
   updateHud();
   setStatus("Starter pack purchased.");
@@ -828,6 +905,7 @@ function buyPremiumSubscription() {
   updateHud();
   renderProfileCard();
   setStatus("Premium activated: no ads + double XP + premium perks.");
+  rewardPop("Premium perks unlocked");
 }
 
 function buyEventPass() {
@@ -848,6 +926,7 @@ function watchRewardAd() {
   }
   state.matchBoosts.xpMultiplier = 2;
   setStatus("Rewarded ad watched (simulated): next match XP x2.");
+  rewardPop("Next match XP x2");
 }
 
 function shareScore() {
@@ -859,10 +938,21 @@ function shareScore() {
   }
 }
 
-function challengeFriend() {
-  const rival = ["NovaWolf", "PixelRider", "SkyHex"][randomInt(0, 2)];
-  const text = `Challenge sent to ${rival}: beat ${state.best}`;
-  setStatus(text);
+async function challengeFriend() {
+  const targetUserId = state.friends[0] || state.userId;
+  const res = await postJSON("/social/challenge", {
+    userId: state.userId,
+    targetUserId,
+    scoreToBeat: state.best,
+  });
+  const deepLink = res?.deepLink || `${location.href}?challenge=${state.best}`;
+  if (ui.challengeLinkBox) {
+    ui.challengeLinkBox.textContent = deepLink;
+    ui.challengeLinkBox.classList.add("drop-flash");
+    setTimeout(() => ui.challengeLinkBox.classList.remove("drop-flash"), 450);
+  }
+  setStatus(`Challenge link ready for ${targetUserId}`);
+  generateShareCard("Friend challenge", `Beat ${state.best} in Nova Blitz`);
 }
 
 function inviteReward() {
@@ -874,6 +964,7 @@ function inviteReward() {
   saveState();
   updateHud();
   setStatus("Invite reward claimed: +320 credits, +10 gems");
+  rewardPop("Invite reward claimed");
 }
 
 function joinTournament() {
@@ -893,6 +984,7 @@ function joinTournament() {
   updateHud();
   setStatus(`Joined ${tournament.name}`);
   postJSON("/tournament/join", { userId: state.userId, tournamentId: tournament.id, paidEntry: tournament.entryFeeCredits > 0 });
+  rewardPop(`Joined ${tournament.name}`);
 }
 
 function renderRotatingShop() {
@@ -903,7 +995,8 @@ function renderRotatingShop() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "shop-btn";
-    const cost = Math.floor(rarityMeta(skin.rarity).buyCost * 0.75);
+    const discount = state.ab.shopPricing === "B" ? 0.68 : 0.75;
+    const cost = Math.floor(rarityMeta(skin.rarity).buyCost * discount);
     btn.textContent = `Daily: ${skin.name} (${cost} credits)`;
     btn.addEventListener("click", () => {
       if (state.credits < cost) return setStatus(`Need ${cost} credits`);
@@ -913,9 +1006,95 @@ function renderRotatingShop() {
       updateHud();
       renderCollection();
       setStatus(`Bought daily item: ${skin.name}`);
+      rewardPop(`Daily purchase: ${skin.name}`);
     });
     ui.rotatingShop.appendChild(btn);
   }
+}
+
+function renderFriends() {
+  if (!ui.friendsList) return;
+  ui.friendsList.innerHTML = "";
+  const friends = state.friends.length ? state.friends : ["No friends linked yet"];
+  for (const friend of friends) {
+    const li = document.createElement("div");
+    li.className = "mission-item";
+    li.textContent = String(friend);
+    ui.friendsList.appendChild(li);
+  }
+}
+
+function renderRivals() {
+  if (!ui.rivalryList) return;
+  ui.rivalryList.innerHTML = "";
+  const pool = state.rivals.length ? state.rivals : ["NovaWolf", "PixelRider", "SkyHex"];
+  for (const rival of pool.slice(0, state.premium ? 5 : 3)) {
+    const li = document.createElement("li");
+    li.className = "mission-item";
+    li.textContent = `${rival} • target: ${Math.max(200, state.best - 40 + randomInt(0, 80))}`;
+    ui.rivalryList.appendChild(li);
+  }
+}
+
+function generateShareCard(title, subtitle) {
+  if (!ui.socialCardCanvas) return;
+  const c = ui.socialCardCanvas;
+  const g = c.getContext("2d");
+  g.fillStyle = "#0d1224";
+  g.fillRect(0, 0, c.width, c.height);
+  const grad = g.createLinearGradient(0, 0, c.width, c.height);
+  grad.addColorStop(0, "#4da0ff");
+  grad.addColorStop(1, "#7d5cff");
+  g.fillStyle = grad;
+  g.fillRect(20, 20, c.width - 40, c.height - 40);
+  g.fillStyle = "#ffffff";
+  g.font = "700 30px Inter, sans-serif";
+  g.fillText("Nova Blitz Arena", 36, 72);
+  g.font = "700 24px Inter, sans-serif";
+  g.fillText(title, 36, 122);
+  g.font = "500 18px Inter, sans-serif";
+  g.fillText(subtitle, 36, 156);
+  g.font = "700 42px Inter, sans-serif";
+  g.fillText(`Best: ${state.best}`, 36, 226);
+  if (ui.challengeLinkBox) ui.challengeLinkBox.textContent = `Share card generated: ${title}`;
+}
+
+function claimComebackReward() {
+  const today = dayKey();
+  if (!state.comebackEligible) {
+    setStatus("Comeback reward not available.");
+    return;
+  }
+  if (state.comebackClaimedAt === today) {
+    setStatus("Comeback reward already claimed today.");
+    return;
+  }
+  state.comebackClaimedAt = today;
+  state.comebackEligible = false;
+  state.credits += 500;
+  state.gems += 20;
+  state.inventory.streetCrates += 1;
+  saveState();
+  updateHud();
+  if (ui.comebackPanel) ui.comebackPanel.textContent = "Claimed today. Come back after another rough streak.";
+  rewardPop("Comeback reward: +500 credits, +20 gems, +1 crate");
+  setStatus("Comeback reward claimed.");
+}
+
+function claimBundleOffer() {
+  if (state.gems < 120) {
+    setStatus("Need 120 gems for flash bundle.");
+    return;
+  }
+  state.gems -= 120;
+  state.credits += 1800;
+  state.inventory.premiumCrates += 1;
+  state.inventory.xpBooster += 2;
+  postJSON("/shop/funnel/starter", { userId: state.userId, accepted: true });
+  saveState();
+  updateHud();
+  rewardPop("Flash bundle claimed");
+  setStatus("Bundle purchased: +1800 credits, +1 premium crate, +2 XP boosters.");
 }
 
 function renderLeaderboard() {
@@ -1004,6 +1183,28 @@ function bindUI() {
   document.getElementById("challengeFriendBtn").addEventListener("click", challengeFriend);
   document.getElementById("inviteRewardBtn").addEventListener("click", inviteReward);
   document.getElementById("joinTournamentBtn").addEventListener("click", joinTournament);
+  if (ui.claimComebackBtn) ui.claimComebackBtn.addEventListener("click", claimComebackReward);
+  if (ui.shareCardBtn) ui.shareCardBtn.addEventListener("click", () => generateShareCard("Challenge card", "Share this with your friends"));
+  if (ui.addFriendBtn) {
+    ui.addFriendBtn.addEventListener("click", async () => {
+      const friendUserId = (ui.friendInput?.value || "").trim();
+      if (!friendUserId) return setStatus("Enter a friend user id.");
+      const out = await postJSON("/social/friend", { userId: state.userId, friendUserId, relationship: "friend" });
+      if (!out?.ok) return setStatus("Could not add friend.");
+      setStatus(`Friend added: ${friendUserId}`);
+      await hydrateSocialFromApi();
+    });
+  }
+  if (ui.addRivalBtn) {
+    ui.addRivalBtn.addEventListener("click", async () => {
+      const friendUserId = (ui.friendInput?.value || "").trim();
+      if (!friendUserId) return setStatus("Enter a rival user id.");
+      const out = await postJSON("/social/friend", { userId: state.userId, friendUserId, relationship: "rival", rivalRank: 1 });
+      if (!out?.ok) return setStatus("Could not add rival.");
+      setStatus(`Rival linked: ${friendUserId}`);
+      await hydrateSocialFromApi();
+    });
+  }
 
   document.getElementById("watchRewardAdBtn").addEventListener("click", watchRewardAd);
   document.getElementById("buyReviveBtn").addEventListener("click", () => buyGemItem("revive"));
@@ -1052,13 +1253,32 @@ async function fetchJSON(path) {
 
 async function submitScore(score, win) {
   updateLocalLeaderboard();
-  await postJSON("/score/submit", {
+  const scoreResponse = await postJSON("/score/submit", {
     userId: state.userId,
     score,
     roundDurationSec: state.roundSeconds,
     level: state.level,
     won: win,
+    fingerprint: navigator.userAgent.slice(0, 120),
+    passXp: state.eventPassXp,
+    actionsPerMinute: Math.floor((state.score / Math.max(1, state.roundSeconds)) * 4),
   });
+  await postJSON("/events/pass/progress", {
+    userId: state.userId,
+    eventId: "season-cosmic-01",
+    xpDelta: Math.floor(score / 20) + (win ? 20 : 5),
+    premiumTrack: state.eventPassPremium,
+  });
+  const gainedPassXp = Math.floor(score / 20) + (win ? 20 : 5);
+  state.eventPassXp += gainedPassXp;
+  while (state.eventPassXp >= 100) {
+    state.eventPassXp -= 100;
+    state.eventPassLevel += 1;
+    rewardPop(`Event pass tier ${state.eventPassLevel}`);
+  }
+  if (scoreResponse?.suspicious) {
+    setStatus("Server flagged run as suspicious; score review pending.");
+  }
   await postJSON("/analytics/track", {
     userId: state.userId,
     eventType: "round_complete",
@@ -1079,6 +1299,18 @@ async function loadRemoteLeaderboard() {
     ul.appendChild(li);
   });
   ui.leaderboardList.appendChild(ul);
+}
+
+async function hydrateSocialFromApi() {
+  const friends = await fetchJSON(`/social/friends/${state.userId}`);
+  const rivals = await fetchJSON(`/social/rivals/${state.userId}`);
+  if (friends?.rows) {
+    state.friends = friends.rows.map((r) => r.friend_id);
+  }
+  if (rivals?.rows) {
+    state.rivals = rivals.rows.map((r) => r.username || r.userId);
+  }
+  renderRivals();
 }
 
 function paypalConfigured() {
@@ -1160,14 +1392,29 @@ function init() {
   renderRotatingShop();
   renderCollection();
   renderProfileCard();
+  renderRivals();
   renderLeaderboard();
+  if (ui.comebackPanel) ui.comebackPanel.textContent = state.comebackEligible ? "Comeback reward ready to claim." : "No comeback reward available.";
+  generateShareCard("Ready to challenge", "Beat my score in 20 seconds");
   updateHud();
   showOverlay("20-second rounds", "Start match for instant results and fast rematch.");
   setStatus("Ready to queue");
   scheduleMidnightRefresh();
   initPayPal();
   loadRemoteLeaderboard();
+  hydrateSocialFromApi();
   postJSON("/auth/session", { userId: state.userId, username: state.userId, fingerprint: navigator.userAgent.slice(0, 120) });
+
+  // Optional AB assignments from backend.
+  postJSON("/ab/assign", { userId: state.userId, testName: "shop-pricing" }).then((r) => {
+    if (r?.variant) {
+      state.ab.shopPricing = r.variant;
+      renderRotatingShop();
+    }
+  });
+  postJSON("/ab/assign", { userId: state.userId, testName: "reward-curve" }).then((r) => {
+    if (r?.variant) state.ab.rewardCurve = r.variant;
+  });
 }
 
 init();
